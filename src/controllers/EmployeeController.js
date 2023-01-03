@@ -1,0 +1,55 @@
+const employeeService = require("../services/EmployeeService");
+const Employee = require("../modal/Employee");
+const EmployeeType = require("../modal/EmployeeType");
+class EmployeeController {
+  async addEmployeeType(req, res, next) {
+    const { name } = req.body;
+    //console.log(number);
+    try {
+      const employeeType = new EmployeeType({
+        type: name,
+      });
+
+      const saveEmp = await employeeService.saveEmployeeType(employeeType);
+      console.log(saveEmp);
+      return res.json(saveEmp);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+  async getCustomerById(req, res, next) {
+    const { userId } = req.params;
+    console.log(userId);
+
+    try {
+      const customer = await Customer.findById(userId);
+
+      res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async addEmployee(req, res, next) {
+    const { firstName, lastName, phoneNumber, typeId, address } = req.body;
+    //console.log(number);
+    try {
+      const employee = new Employee({
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        typeId: typeId,
+        address: address,
+      });
+
+      const saveEmp = await employeeService.saveEmployee(employee);
+      console.log(saveEmp);
+      return res.json(saveEmp);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+}
+
+module.exports = new EmployeeController();
