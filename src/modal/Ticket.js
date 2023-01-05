@@ -17,6 +17,18 @@ const ticketSchema = new Schema(
     },
     chair: [],
     locationBus: {
+      locaDeparture: {
+        type: String,
+      },
+      locaDestination: {
+        type: String,
+      },
+    },
+    status: {
+      type: Boolean,
+      default: false,
+    },
+    phoneNumber: {
       type: String,
     },
   },

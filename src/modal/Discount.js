@@ -26,6 +26,13 @@ const discountSchema = new Schema({
     type: Number,
     required: true,
   },
+  status: {
+    type: Boolean,
+    default: false,
+  },
+  title: {
+    type: String,
+  },
 });
 
 const Discount = mongoose.model("Discount", discountSchema);

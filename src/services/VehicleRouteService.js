@@ -10,18 +10,19 @@ const VehicleRouteService = {
     departure,
     destination,
     carId,
-    intendTime
+    intendTime,
+    arrayId
   ) => {
     const { chair } = await Car.findById(carId);
     console.log(chair);
-    const arrayId = [
-      "63b2e4adeaca88ce6a368a22",
-      "63b2e549eaca88ce6a368a4a",
-      "63b409acbad81b26f4d0ffc3",
-      "63b409b8bad81b26f4d0ffdf",
-      "63b409c7bad81b26f4d0fffb",
-      "63b409d5bad81b26f4d10017",
-    ];
+    // const arrayId = [
+    //   "63b2e4adeaca88ce6a368a22",
+    //   "63b2e549eaca88ce6a368a4a",
+    //   "63b409acbad81b26f4d0ffc3",
+    //   "63b409b8bad81b26f4d0ffdf",
+    //   "63b409c7bad81b26f4d0fffb",
+    //   "63b409d5bad81b26f4d10017",
+    // ];
     var arrayCararrive = arrayId.slice(0, arrayId.length / 2);
     var arrayDes = arrayId.slice(arrayId.length / 2, arrayId.length);
     console.log("arrayCararrive", arrayCararrive);
@@ -30,7 +31,7 @@ const VehicleRouteService = {
     startDate = new Date("2023-02-18");
     endDate = new Date("2023-02-20");
     startDate.setHours(03);
-    startDate.setMinutes(30);
+    startDate.setMinutes(00);
 
     var endTime = new Date("2023-01-03");
     console.log("house: ", startDate.getHours());
@@ -116,7 +117,7 @@ const VehicleRouteService = {
       startDate.setHours(03);
       arrive = 0;
       des = 0;
-      startDate.setMinutes(30);
+      startDate.setMinutes(00);
       endTime.setHours(startDate.getHours() + intendTime * 1);
       console.log("d", startDate);
     }

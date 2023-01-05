@@ -1,18 +1,29 @@
 const vehicleRouteService = require("../services/VehicleRouteService");
 const Customer = require("../modal/Customer");
+const Route = require("../modal/Route");
 class VehicleRouteController {
   async addVehicleRoute(req, res, next) {
-    const { startDate, endDate, departure, destination, carId, intendTime } =
-      req.body;
+    const { startDate, endDate, routeId, carId, arrayId } = req.body;
     //console.log(number);
     try {
+      const { place, intendTime } = await Route.findOne(
+        { routeId },
+        {
+          place: { _id: 1 },
+          intendTime: 1,
+        }
+      );
+      const departure = place[0]._id;
+      const destination = place[1]._id;
+      console.log("location", departure);
       const route = await vehicleRouteService.addRoutes(
         startDate,
         endDate,
         departure,
         destination,
         carId,
-        intendTime
+        intendTime,
+        arrayId
       );
       return res.json(route);
     } catch (error) {

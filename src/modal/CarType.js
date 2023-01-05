@@ -9,15 +9,20 @@ const carTypeSchema = new Schema({
   },
   price: [
     {
-      dayUpdate: {
+      startDate: {
         type: Date,
         default: new Date(),
       },
-      newPrice: {
+      endDate: {
+        type: Date,
+        default: new Date(),
+      },
+      price: {
         type: Number,
       },
-      oldPrice: {
-        type: Number,
+      status: {
+        type: Boolean,
+        default: false,
       },
     },
   ],
