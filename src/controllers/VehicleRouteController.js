@@ -3,7 +3,7 @@ const Customer = require("../modal/Customer");
 const Route = require("../modal/Route");
 class VehicleRouteController {
   async addVehicleRoute(req, res, next) {
-    const { startDate, endDate, routeId, carId, arrayId } = req.body;
+    const { startDate, endDate, routeId, arrayId } = req.body;
     //console.log(number);
     try {
       const { place, intendTime } = await Route.findOne(
@@ -21,7 +21,6 @@ class VehicleRouteController {
         endDate,
         departure,
         destination,
-        carId,
         intendTime,
         arrayId
       );

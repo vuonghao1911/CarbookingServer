@@ -37,10 +37,10 @@ class CarController {
   }
   async getCarById(req, res, next) {
     const { id } = req.params;
-    console.log(userId);
+    console.log(id);
 
     try {
-      const customer = await carService.getCarById(userId);
+      const customer = await carService.getCarById(id);
       res.json(customer);
     } catch (error) {
       next(error);

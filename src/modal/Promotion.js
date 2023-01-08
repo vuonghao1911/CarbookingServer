@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const ObjectId = mongoose.Types.ObjectId;
 
-const discountSchema = new Schema({
+const promotionSchema = new Schema({
   startDate: {
     type: Date,
     required: true,
@@ -22,7 +22,7 @@ const discountSchema = new Schema({
     type: ObjectId,
     required: true,
   },
-  quantity: {
+  quantityTicket: {
     type: Number,
     required: true,
   },
@@ -35,6 +35,6 @@ const discountSchema = new Schema({
   },
 });
 
-const Discount = mongoose.model("Discount", discountSchema);
+const Promotion = mongoose.model("Promotion", promotionSchema);
 
-module.exports = Discount;
+module.exports = Promotion;

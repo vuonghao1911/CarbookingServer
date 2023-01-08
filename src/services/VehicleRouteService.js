@@ -9,20 +9,12 @@ const VehicleRouteService = {
     endDate,
     departure,
     destination,
-    carId,
     intendTime,
     arrayId
   ) => {
-    const { chair } = await Car.findById(carId);
+    const { chair } = await Car.findById(arrayId[0]);
     console.log(chair);
-    // const arrayId = [
-    //   "63b2e4adeaca88ce6a368a22",
-    //   "63b2e549eaca88ce6a368a4a",
-    //   "63b409acbad81b26f4d0ffc3",
-    //   "63b409b8bad81b26f4d0ffdf",
-    //   "63b409c7bad81b26f4d0fffb",
-    //   "63b409d5bad81b26f4d10017",
-    // ];
+
     var arrayCararrive = arrayId.slice(0, arrayId.length / 2);
     var arrayDes = arrayId.slice(arrayId.length / 2, arrayId.length);
     console.log("arrayCararrive", arrayCararrive);
@@ -51,7 +43,7 @@ const VehicleRouteService = {
             intendTime: intendTime,
             departure: departure,
             destination: destination,
-            carId: arrayCararrive[arrive],
+            carId: arrayCararrive[arrive].id,
             chair: chair,
           });
           const routeDes = new VehicleRoute({
@@ -61,7 +53,7 @@ const VehicleRouteService = {
             intendTime: intendTime,
             departure: destination,
             destination: departure,
-            carId: arrayDes[arrive],
+            carId: arrayDes[arrive].id,
             chair: chair,
           });
           console.log("arrive: ", route);
@@ -80,7 +72,7 @@ const VehicleRouteService = {
               intendTime: intendTime,
               departure: departure,
               destination: destination,
-              carId: arrayDes[des],
+              carId: arrayDes[des].id,
               chair: chair,
             });
             const routeDes = new VehicleRoute({
@@ -90,7 +82,7 @@ const VehicleRouteService = {
               intendTime: intendTime,
               departure: destination,
               destination: departure,
-              carId: arrayCararrive[des],
+              carId: arrayCararrive[des].id,
               chair: chair,
             });
             await route.save();
