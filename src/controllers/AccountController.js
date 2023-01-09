@@ -4,7 +4,11 @@ const CustomerService = require("../services/customerService");
 const Account = require("../modal/Account");
 const Employee = require("../modal/Employee");
 const Customer = require("../modal/Customer");
-const { checklogin } = require("../services/AccountService");
+const {
+  checklogin,
+  checkRegister,
+  saveAccount,
+} = require("../services/AccountService");
 
 class AccountController {
   async Register(req, res, next) {
@@ -22,36 +26,43 @@ class AccountController {
     var newAccount;
 
     try {
-      if (role) {
-        const employee = new Employee({
-          firstName: firstName,
-          lastName: lastName,
-          phoneNumber: phoneNumber,
-          typeId: typeId,
-          address: address,
-        });
-        const { _id } = await EmployeeService.saveEmployee(employee);
-        const account = new Account({
-          phoneNumber: phoneNumber,
-          passWord: passWord,
-          role: role,
-          idUser: _id,
-        });
-        newAccount = await AccountService.saveAccount(account);
+      const checkRegister = await AccountService.checkRegister(phoneNumber);
+      if (checkRegister != null) {
+        return res.json({ checkRegister: false });
       } else {
-        const customer = new Customer({
-          firstName: firstName,
-          lastName: lastName,
-          phoneNumber: phoneNumber,
-        });
-        const { _id } = await CustomerService.addCustomer(customer);
-        const account = new Account({
-          phoneNumber: phoneNumber,
-          passWord: passWord,
-          role: role,
-          idUser: _id,
-        });
-        newAccount = await AccountService.saveAccount(account);
+        if (role) {
+          const employee = new Employee({
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber,
+            typeId: typeId,
+            address: address,
+          });
+          const { _id } = await EmployeeService.saveEmployee(employee);
+          const account = new Account({
+            phoneNumber: phoneNumber,
+            passWord: passWord,
+            role: role,
+            idUser: _id,
+          });
+          const saveAccount = await AccountService.saveAccount(account);
+          newAccount = { saveAccount, checkRegister: true };
+        } else {
+          const customer = new Customer({
+            firstName: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber,
+          });
+          const { _id } = await CustomerService.addCustomer(customer);
+          const account = new Account({
+            phoneNumber: phoneNumber,
+            passWord: passWord,
+            role: role,
+            idUser: _id,
+          });
+          const saveAccount = await AccountService.saveAccount(account);
+          newAccount = { saveAccount, checkRegister: true };
+        }
       }
 
       return res.json(newAccount);

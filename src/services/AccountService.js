@@ -10,6 +10,12 @@ const AccountService = {
       $and: [{ phoneNumber: phoneNumber }, { passWord: passWord }],
     });
   },
+
+  checkRegister: async (phoneNumber) => {
+    return await Account.findOne({
+      phoneNumber: phoneNumber,
+    });
+  },
 };
 
 module.exports = AccountService;
