@@ -5,12 +5,12 @@ const { route } = require("../routes/Customer");
 
 const VehicleRouteService = {
   addRoutes: async (
-    startDate,
-    endDate,
+    startDate, // start date of routes
+    endDate, // end date of routes
     departure,
     destination,
     intendTime,
-    arrayId
+    arrayId // array id of car
   ) => {
     const { chair } = await Car.findById(arrayId[0]);
     console.log(chair);
@@ -20,12 +20,14 @@ const VehicleRouteService = {
     console.log("arrayCararrive", arrayCararrive);
     console.log("arrayCararrive1", arrayDes);
 
-    startDate = new Date("2023-02-18");
-    endDate = new Date("2023-02-20");
+    // edit start and end date
+    startDate = new Date("2023-02-18"); // start date
+    endDate = new Date("2023-02-20"); // end date
+    // start to 3 o'clock
     startDate.setHours(03);
     startDate.setMinutes(00);
 
-    var endTime = new Date("2023-01-03");
+    var endTime = new Date("2023-01-03"); // endTime = startDate
     console.log("house: ", startDate.getHours());
     endTime.setHours(startDate.getHours() + intendTime * 1);
     const array = [];
@@ -102,6 +104,8 @@ const VehicleRouteService = {
         console.log("startTime: ", startDate.getHours());
         console.log("endTime: ", endTime.getHours());
         // console.log("route ", route);
+
+        // set hours to start next route
         startDate.setHours(startDate.getHours() + 3);
         endTime.setHours(startDate.getHours() + intendTime * 1);
       }

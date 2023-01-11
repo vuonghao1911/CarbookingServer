@@ -1,6 +1,8 @@
 const Place = require("../modal/Place");
 const Route = require("../modal/Route");
 
+// place and route services
+
 const PlaceService = {
   savePlace: async (place) => {
     return await place.save();
