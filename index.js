@@ -6,7 +6,7 @@ const https = require("https");
 const serverTest = http.createServer(app);
 const server = https.createServer(app);
 
-const handleEror = require("./middleware/handleEror");
+const handleEror = require("./src/middleware/handleEror");
 
 //const { connectDB } = require("./src/config/configDb");
 const connectMG = require("./src/config/configMg");
