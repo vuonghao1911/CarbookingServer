@@ -3,7 +3,7 @@ const Car = require("../modal/Car");
 const CarType = require("../modal/CarType");
 class CarController {
   async addCarType(req, res, next) {
-    const { type, oldPrice, newPrice } = req.body;
+    const { type } = req.body;
     //console.log(number);
     var array = [];
     for (var i = 1; i < 19; i++) {
@@ -22,10 +22,9 @@ class CarController {
     }
 
     console.log(array);
-    const price = { newPrice: newPrice, oldPrice: oldPrice };
 
     try {
-      const carType = new CarType({ type: type, price: price, chair: array });
+      const carType = new CarType({ type: type, chair: array });
 
       const saveCar = await carService.addCarType(carType);
       console.log(saveCar);

@@ -7,6 +7,7 @@ const route = (app) => {
   const ticketRoute = require("./Ticket");
   const promotionRoute = require("./Promotion");
   const accountRoute = require("./Account");
+  const priceRoute = require("./Price");
 
   app.use("/customers", customerRouter);
   app.use("/cars", carRouter);
@@ -16,6 +17,7 @@ const route = (app) => {
   app.use("/tickets", ticketRoute);
   app.use("/promotions", promotionRoute);
   app.use("/", accountRoute);
+  app.use("/prices", priceRoute);
 };
 
 module.exports = route;

@@ -7,25 +7,6 @@ const carTypeSchema = new Schema({
     type: String,
     required: true,
   },
-  price: [
-    {
-      startDate: {
-        type: Date,
-        default: new Date(),
-      },
-      endDate: {
-        type: Date,
-        default: new Date(),
-      },
-      price: {
-        type: Number,
-      },
-      status: {
-        type: Boolean,
-        default: false,
-      },
-    },
-  ],
 
   chair: [
     {

@@ -13,18 +13,15 @@ const promotionSchema = new Schema({
     required: true,
     default: new Date(),
   },
-
   percentDiscount: {
     type: Number,
-    required: true,
   },
-  carTypeId: {
+  routeId: {
     type: ObjectId,
     required: true,
   },
   quantityTicket: {
     type: Number,
-    required: true,
   },
   status: {
     type: Boolean,
@@ -32,6 +29,22 @@ const promotionSchema = new Schema({
   },
   title: {
     type: String,
+  },
+
+  purchaseAmount: {
+    type: Number,
+  },
+  moneyReduced: {
+    type: Number,
+  },
+  maximumDiscount: {
+    type: Number,
+  },
+  budget: {
+    type: Number,
+  },
+  promotionType: {
+    type: ObjectId,
   },
 });
 
