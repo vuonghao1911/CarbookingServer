@@ -1,6 +1,8 @@
 const Car = require("../modal/Car");
 const CarType = require("../modal/CarType");
 
+// car and car type services
+
 const CarService = {
   addCar: async (car) => {
     return await car.save();

@@ -44,6 +44,8 @@ routes(app);
 serverTest.listen(5005, () => {
   console.log("Example app listening on http://localhost:" + 5005);
 });
+var date = new Date("2023-01-03T09:00:00.000Z");
+console.log(date.toString());
 // server.listen(5005, () => {
 //   console.log("Example app listening on https://localhost:" + 5005);
 // });

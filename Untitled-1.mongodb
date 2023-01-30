@@ -1,0 +1,15 @@
+// db.cartypes.find()
+// db.routes.findOne({_id:ObjectId("63b5b1e5bf5e0174f4c15c02")},{
+// place:{_id:1},intendTime:1
+// })
+//c
+//db.vehicleroutes.drop()
+// db.vehicleroutes.updateOne({_id:ObjectId("63b6b3ed4c5a1c746bc789e7")},{
+//     $set:{"chair.$[elem].status":false}
+// },
+// {arrayFilters:[{"elem._id":ObjectId("63b281f4d571739a200fac6f")}]}
+// )
+// db.accounts.find({$and:[{phoneNumber:"0123654874"},{passWord:"111111"}]})
+db.accounts.findOne({
+      phoneNumber: "0123654874",
+    });

@@ -12,7 +12,7 @@ const VehicleRouteService = {
     intendTime,
     arrayId // array id of car
   ) => {
-    const { chair } = await Car.findById(arrayId[0]);
+    const { chair } = await Car.findById(arrayId[0].id);
     console.log(chair);
 
     var arrayCararrive = arrayId.slice(0, arrayId.length / 2);
@@ -21,13 +21,13 @@ const VehicleRouteService = {
     console.log("arrayCararrive1", arrayDes);
 
     // edit start and end date
-    startDate = new Date("2023-02-18"); // start date
-    endDate = new Date("2023-02-20"); // end date
+    startDate = new Date(startDate); // start date
+    endDate = new Date(endDate); // end date
     // start to 3 o'clock
     startDate.setHours(03);
     startDate.setMinutes(00);
 
-    var endTime = new Date("2023-01-03"); // endTime = startDate
+    var endTime = new Date(startDate); // endTime = startDate
     console.log("house: ", startDate.getHours());
     endTime.setHours(startDate.getHours() + intendTime * 1);
     const array = [];
@@ -37,7 +37,7 @@ const VehicleRouteService = {
     console.log("startDate1: ", startDate.getHours());
     while (startDate <= endDate) {
       while (startDate.getHours() < 17) {
-        if (arrive < arrayId.length && arrive < intendTime) {
+        if (arrive < arrayId.length / 2 && arrive < intendTime) {
           const route = new VehicleRoute({
             startDate: startDate,
             startTime: startDate,
@@ -58,13 +58,14 @@ const VehicleRouteService = {
             carId: arrayDes[arrive].id,
             chair: chair,
           });
-          console.log("arrive: ", route);
-          console.log("des: ", routeDes);
+          console.log("arrive1: ", route);
+          console.log("des1: ", routeDes);
           await route.save();
           await routeDes.save();
+          console.log("arr", arrive);
         }
 
-        if (arrive > arrayId.length / 2 && arrive + 1 > intendTime) {
+        if (arrive >= arrayId.length / 2 && arrive + 3 > intendTime) {
           if (des < arrayId.length / 2 && des < intendTime) {
             console.log("----------------------------");
             const route = new VehicleRoute({
@@ -85,20 +86,24 @@ const VehicleRouteService = {
               departure: destination,
               destination: departure,
               carId: arrayCararrive[des].id,
-              chair: chair,
+              // chair: chair,
             });
             await route.save();
             await routeDes.save();
-            console.log("arrive: ", route);
-            console.log("des: ", routeDes);
-            console.log("idCrar: ", des);
+            console.log("arrive2: ", route);
+            console.log("des2: ", routeDes);
+
             des++;
           } else {
             arrive = 0;
           }
         }
         arrive++;
+        if (des >= arrayId.length / 2) {
+          arrive = 0;
+        }
         console.log("arrive", arrive);
+        console.log("des: ", des);
         // await route.save();
         array.push(route);
         console.log("startTime: ", startDate.getHours());
