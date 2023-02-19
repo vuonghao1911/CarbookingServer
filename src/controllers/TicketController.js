@@ -1,46 +1,62 @@
 const ticketService = require("../services/TicketService");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Ticket = require("../modal/Ticket");
+const Customer = require("../modal/Customer");
 const VehicleRoute = require("../modal/VehicleRoute");
 class TicketController {
   async bookingTicket(req, res, next) {
     const {
       vehicleRouteId,
-      customerId,
+      customer,
       quantity,
       chair,
       locationBus,
       phoneNumber,
     } = req.body;
-    //console.log(number);
+    console.log(chair);
     try {
-      const ticket = new Ticket({
-        vehicleRouteId: vehicleRouteId,
-        customerId: customerId,
-        quantity: quantity,
-        chair: chair,
-        locationBus: locationBus,
-        phoneNumber: phoneNumber,
-      });
-
       const Arrayplace = await Promise.all(
         chair.map((e) => {
-          const _id = e.id;
-          console.log(_id);
+          const name = e;
           const matchedCount = VehicleRoute.updateOne(
             { _id: ObjectId(vehicleRouteId) },
             {
               $set: { ["chair.$[elem].status"]: true },
             },
-            { arrayFilters: [{ "elem._id": ObjectId(_id) }] }
+            { arrayFilters: [{ "elem.seats": name }] }
           );
           return matchedCount;
         })
       );
-      console.log(Arrayplace);
-      const saveticket = await ticketService.saveTicket(ticket);
-      console.log(saveticket);
-      return res.json(saveticket);
+      const checkCustomer = await Customer.count({ phoneNumber: phoneNumber });
+      if (checkCustomer === 0) {
+        const customerAdd = new Customer({ firstName: customer.firstNameCustomer, lastName: customer.lastNameCustomer, phoneNumber: phoneNumber });
+        const newCustomer = await customerAdd.save();
+        const saveticket = await ticketService.saveTicket(new Ticket(
+          {
+            vehicleRouteId: vehicleRouteId,
+            customerId: newCustomer._id,
+            quantity: quantity,
+            chair: chair,
+            locationBus: locationBus,
+            phoneNumber: phoneNumber
+          }));
+          return res.json(saveticket);
+      }
+      else
+      {
+        const customerFind = await Customer.find({ phoneNumber: phoneNumber });
+        const saveticket = await ticketService.saveTicket( new Ticket(
+          {
+            vehicleRouteId: vehicleRouteId,
+            customerId: customerFind._id,
+            quantity: quantity,
+            chair: chair,
+            locationBus: locationBus,
+            phoneNumber: phoneNumber
+          }));
+          return res.json(saveticket);
+      }
     } catch (error) {
       console.log(error);
       next(error);
@@ -58,6 +74,93 @@ class TicketController {
       next(error);
     }
   }
+  async getTicket(req, res, next) {
+    try {
+      const customer = await Ticket.aggregate([
+        {
+          $lookup:
+          {
+            from: "customers",
+            localField: "customerId",
+            foreignField: "_id",
+            as: "customer"
+          },
+        },
+        {
+          "$unwind": "$customer",
+        },
+        {
+          $lookup:
+          {
+            from: "vehicleroutes",
+            localField: "vehicleRouteId",
+            foreignField: "_id",
+            as: "vehicleroute"
+          },
+        },
+        {
+          "$unwind": "$vehicleroute",
+        },
+        {
+          $lookup:
+          {
+            from: "places",
+            localField: "vehicleroute.departure",
+            foreignField: "_id",
+            as: "departure"
+          },
+        },
+        {
+          "$unwind": "$departure",
+        },
+        {
+          $lookup:
+          {
+            from: "places",
+            localField: "vehicleroute.destination",
+            foreignField: "_id",
+            as: "destination"
+          },
+        },
+        {
+          "$unwind": "$destination",
+        },
+        {
+          $lookup:
+          {
+            from: "cars",
+            localField: "vehicleroute.carId",
+            foreignField: "_id",
+            as: "car"
+          },
+        },
+        {
+          "$unwind": "$car",
+        },
+        {
+          "$project": {
+            "_id": "$_id",
+            "firstName": "$customer.firstName",
+            "lastName": "$customer.lastName",
+            "phoneNumber": "$customer.phoneNumber",
+            "departure": "$departure.name",
+            "destination": "$destination.name",
+            "licensePlates": "$car.licensePlates",
+            "startDate": "$vehicleroute.startDate",
+            "locaDeparture": "$locationBus.locaDeparture",
+            "locaDestination": "$locationBus.locaDestination",
+            "chair": "$chair",
+            "createdAt": "$createdAt",
+            "updatedAt": "$updatedAt"
+          },
+        },
+      ]);
+      res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 module.exports = new TicketController();

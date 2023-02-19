@@ -10,7 +10,6 @@ const ticketSchema = new Schema(
     },
     customerId: {
       type: ObjectId,
-      required: true,
     },
     quantity: {
       type: Number,

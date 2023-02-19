@@ -7,6 +7,9 @@ const EmployeeService = {
   saveEmployeeType: async (employeeType) => {
     return await employeeType.save();
   },
+  getEmployeeType: async (req, res, next) => {
+    return await EmployeeType.find();
+  },
   getCarById: async (_id) => {
     return await Car.findById(_id);
   },

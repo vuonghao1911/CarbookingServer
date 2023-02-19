@@ -18,6 +18,24 @@ class EmployeeController {
       next(error);
     }
   }
+  async getEmployeeType(req, res, next) {
+    try {
+      const getTypeEmp = await employeeService.getEmployeeType(req, res, next);
+      return res.json(getTypeEmp);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+  async getEmployee(req, res, next) {
+    try {
+      const getEmps = await Employee.find();
+      return res.json(getEmps);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
   async getCustomerById(req, res, next) {
     const { userId } = req.params;
     console.log(userId);

@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
+const cors = require('cors');
 const port = 3000;
 const http = require("http");
 const https = require("https");
+var bodyParser = require('body-parser');
 const serverTest = http.createServer(app);
 const server = https.createServer(app);
 
@@ -17,16 +19,21 @@ const routes = require("./src/routes");
 var User = require("./src/modal/User");
 var Customer = require("./src/modal/Customer");
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
+app.use((req, res, next) => {
+  res.header({"Access-Control-Allow-Origin": "*"});
+  next();
+}) 
 //connectDB();
 connectMG();
+routes(app);
 app.get("/", (req, res) => {
   res.json({ test: "Hello World!" });
 });
 
-routes(app);
+
 
 // app.get("/user", async (req, res) => {
 //   const response = await User.findAll()

@@ -4,8 +4,7 @@ const ObjectId = mongoose.Types.ObjectId;
 
 const placeSchema = new Schema({
   name: {
-    type: String,
-    required: true,
+    type: String
   },
   busStation: [
     {

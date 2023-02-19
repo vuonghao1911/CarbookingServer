@@ -31,6 +31,33 @@ class CustomerController {
       next(error);
     }
   }
+  async getCustomer(req, res, next) {
+    try {
+      const customer = await Customer.aggregate([
+        {
+          $lookup:
+          {
+            from: "tickets",
+            localField: "_id",
+            foreignField: "customerId",
+            as: "tickets"
+          },
+        },
+        {
+          "$project": {
+            "_id": "$_id",
+            "firstName": "$firstName",
+            "lastName": "$lastName",
+            "phoneNumber": "$phoneNumber",
+            "quantityTicket": {"$size": "$tickets"}
+          },
+        },
+      ]);
+      res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new CustomerController();

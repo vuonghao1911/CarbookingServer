@@ -1,6 +1,7 @@
 const promotionService = require("../services/PromotionService");
 const Promotion = require("../modal/Promotion");
 const PromotionService = require("../services/PromotionService");
+const PromotionType = require("../modal/PromotionType");
 
 class PromotionController {
   async addPromotion(req, res, next) {
@@ -20,8 +21,8 @@ class PromotionController {
     } = req.body;
 
     const promotion = new Promotion({
-      startDate: new Date("2023-01-14"),
-      endDate: new Date("2023-03-14"),
+      startDate: startDate,
+      endDate: endDate,
       percentDiscount: percentDiscount,
       routeId: routeId,
       quantityTicket: quantityTicket,
@@ -41,12 +42,58 @@ class PromotionController {
       next(error);
     }
   }
+  async getPromotion(req, res, next) {
+    try {
+      const promotion = await Promotion.aggregate([
+        {
+          $lookup:
+          {
+            from: "routes",
+            localField: "routeId",
+            foreignField: "_id",
+            as: "route"
+          },
+        },
+        {
+          "$unwind": "$route"
+        },
+        {
+          "$project": {
+            "_id": "$_id",
+            "startDate": "$startDate",
+            "endDate": "$endDate",
+            "percentDiscount": "$percentDiscount",
+            "routeId": "$routeId",
+            "quantityTicket": "$quantityTicket",
+            "status": "$status",
+            "title": "$title",
+            "purchaseAmount": "$purchaseAmount",
+            "moneyReduced": "$moneyReduced",
+            "maximumDiscount": "$maximumDiscount",
+            "budget": "$budget",
+            "route": "$route.place.name"
+          },
+        },
+      ]);
+      res.json(promotion);
+    } catch (error) {
+      next(error);
+    }
+  }
   async addPromotionType(req, res, next) {
     const { name } = req.body;
 
     try {
       const newPro = await PromotionService.savePromotionType(name);
       res.json(newPro);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getPromotionType(req, res, next) {
+    try {
+      const promotionType = await PromotionType.find();
+      res.json(promotionType);
     } catch (error) {
       next(error);
     }

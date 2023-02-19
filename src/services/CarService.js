@@ -13,6 +13,9 @@ const CarService = {
   addCarType: async (carType) => {
     return await carType.save();
   },
+  getCarType: async (req, res, next) => {
+    return await CarType.find();
+  },
 };
 
 module.exports = CarService;

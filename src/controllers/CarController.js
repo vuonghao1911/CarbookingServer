@@ -45,6 +45,57 @@ class CarController {
       next(error);
     }
   }
+  async getCarType(req, res, next) {
+    try {
+      const carType = await carService.getCarType(req, res, next);
+      res.json(carType);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getCar(req, res, next) {
+    try {
+      const cars = await Car.aggregate([
+        {
+          $lookup:
+          {
+            from: "cartypes",
+            localField: "typeCarId",
+            foreignField: "_id",
+            as: "cartype"
+          },
+        },
+        {
+          "$unwind": "$cartype"
+        },
+        {
+          $lookup:
+          {
+            from: "employees",
+            localField: "employeeId",
+            foreignField: "_id",
+            as: "employee"
+          },
+        },
+        {
+          "$unwind": "$employee"
+        },
+        {
+          "$project": {
+            "_id": "$_id",
+            "licensePlates": "$licensePlates",
+            "carType": "$cartype",
+            "employeeFirstName": "$employee.firstName",
+            "employeeLastName": "$employee.lastName",
+            "chair": {"$size": "$chair"}
+          },
+        },
+      ]);
+      res.json(cars);
+    } catch (error) {
+      next(error);
+    }
+  }
   async addCar(req, res, next) {
     const { idTypeCar, licensePlates, employeeId } = req.body;
 
@@ -52,8 +103,8 @@ class CarController {
     console.log(chair);
     const car = new Car({
       licensePlates: licensePlates,
-      employeeId: employeeId,
       typeCarId: idTypeCar,
+      employeeId: employeeId,
       chair: chair,
     });
 

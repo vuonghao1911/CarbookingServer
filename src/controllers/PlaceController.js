@@ -22,7 +22,7 @@ class PlaceController {
   }
 
   async addRoute(req, res, next) {
-    const { carTypeId, intendTime, placeId } = req.body;
+    const { carTypeId, intendTime, placeId} = req.body;
     //console.log(number);
 
     const Arrayplace = await Promise.all(
@@ -36,12 +36,10 @@ class PlaceController {
       const route = new Route({
         carTypeId: carTypeId,
         intendTime: intendTime,
-        place: Arrayplace,
+        place: Arrayplace
       });
-
-      const saveRoute = await placeService.savePlace(route);
-      console.log(saveRoute);
-      return res.json(saveRoute);
+      const saveRoute = await placeService.saveRoute(route);
+      return res.json("Thành công!");
     } catch (error) {
       console.log(error);
       next(error);
@@ -55,6 +53,40 @@ class PlaceController {
       const customer = await Customer.findById(userId);
 
       res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getPlace(req, res, next) {
+    try {
+      const place = await Place.find();
+      res.json(place);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getRoute(req, res, next) {
+    try {
+      const route = await Route.aggregate([
+        {
+          $lookup:
+          {
+            from: "cartypes",
+            localField: "carTypeId",
+            foreignField: "_id",
+            as: "cartype"
+          },
+        },
+        {
+          "$project": {
+            "_id": "$_id",
+            "carType": "$cartype",
+            "intendTime": "$intendTime",
+            "place": "$place"
+          },
+        },
+      ]);
+      res.json(route);
     } catch (error) {
       next(error);
     }

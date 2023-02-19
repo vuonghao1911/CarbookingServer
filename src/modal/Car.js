@@ -10,7 +10,6 @@ const carSchema = new Schema({
     type: ObjectId,
     required: true,
   },
-
   employeeId: {
     type: ObjectId,
   },

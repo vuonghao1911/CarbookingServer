@@ -5,12 +5,10 @@ const ObjectId = mongoose.Types.ObjectId;
 const routeSchema = new Schema({
   carTypeId: {
     type: ObjectId,
-    required: true,
   },
   intendTime: {
     type: Number,
   },
-
   place: [],
 });
 

@@ -5,19 +5,9 @@ const ObjectId = mongoose.Types.ObjectId;
 const vehicleRouteSchema = new Schema({
   startDate: {
     type: Date,
-    required: true,
   },
-  startTime: {
+  endDate: {
     type: Date,
-    required: true,
-  },
-
-  endTime: {
-    type: Date,
-    required: true,
-  },
-  intendTime: {
-    type: Number,
   },
   departure: {
     type: ObjectId,
