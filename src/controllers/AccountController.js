@@ -4,11 +4,7 @@ const CustomerService = require("../services/customerService");
 const Account = require("../modal/Account");
 const Employee = require("../modal/Employee");
 const Customer = require("../modal/Customer");
-const {
-  checklogin,
-  checkRegister,
-  saveAccount,
-} = require("../services/AccountService");
+const { truncate } = require("fs/promises");
 
 class AccountController {
   async Register(req, res, next) {
@@ -94,6 +90,26 @@ class AccountController {
       }
 
       res.json(user);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async ChangePass(req, res, next) {
+    const { phoneNumber, newPass } = req.body;
+
+    try {
+      const account = await AccountService.checkRegister(phoneNumber);
+
+      if (account == null) {
+        res.json({ checkChangePass: false });
+      } else {
+        const accountChange = await Account.updateOne(
+          { phoneNumber: phoneNumber },
+          { $set: { passWord: newPass } }
+        );
+        res.json({ checkChangePass: true });
+      }
     } catch (error) {
       next(error);
     }

@@ -35,26 +35,47 @@ class CustomerController {
     try {
       const customer = await Customer.aggregate([
         {
-          $lookup:
-          {
+          $lookup: {
             from: "tickets",
             localField: "_id",
             foreignField: "customerId",
-            as: "tickets"
+            as: "tickets",
           },
         },
         {
-          "$project": {
-            "_id": "$_id",
-            "firstName": "$firstName",
-            "lastName": "$lastName",
-            "phoneNumber": "$phoneNumber",
-            "quantityTicket": {"$size": "$tickets"}
+          $project: {
+            _id: "$_id",
+            firstName: "$firstName",
+            lastName: "$lastName",
+            phoneNumber: "$phoneNumber",
+            quantityTicket: { $size: "$tickets" },
           },
         },
       ]);
       res.json(customer);
     } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateInfo(req, res, next) {
+    const { firstName, lastName, phoneNumber, id } = req.body;
+    //console.log(number);
+    try {
+      await Customer.updateOne(
+        { _id: id },
+        {
+          $set: {
+            lastName: lastName,
+            firstName: firstName,
+            phoneNumber: phoneNumber,
+          },
+        }
+      );
+      console.log(true);
+      return res.json(true);
+    } catch (error) {
+      console.log(error);
       next(error);
     }
   }

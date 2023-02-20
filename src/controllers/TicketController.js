@@ -3,6 +3,7 @@ const ObjectId = require("mongoose").Types.ObjectId;
 const Ticket = require("../modal/Ticket");
 const Customer = require("../modal/Customer");
 const VehicleRoute = require("../modal/VehicleRoute");
+const Route = require("../modal/Route");
 class TicketController {
   async bookingTicket(req, res, next) {
     const {
@@ -12,12 +13,14 @@ class TicketController {
       chair,
       locationBus,
       phoneNumber,
+      discountAmount,
+      idPromotion,
     } = req.body;
     console.log(chair);
     try {
       const Arrayplace = await Promise.all(
         chair.map((e) => {
-          const name = e;
+          const name = e.seats;
           const matchedCount = VehicleRoute.updateOne(
             { _id: ObjectId(vehicleRouteId) },
             {
@@ -30,32 +33,39 @@ class TicketController {
       );
       const checkCustomer = await Customer.count({ phoneNumber: phoneNumber });
       if (checkCustomer === 0) {
-        const customerAdd = new Customer({ firstName: customer.firstNameCustomer, lastName: customer.lastNameCustomer, phoneNumber: phoneNumber });
+        const customerAdd = new Customer({
+          firstName: customer.firstNameCustomer,
+          lastName: customer.lastNameCustomer,
+          phoneNumber: phoneNumber,
+        });
         const newCustomer = await customerAdd.save();
-        const saveticket = await ticketService.saveTicket(new Ticket(
-          {
-            vehicleRouteId: vehicleRouteId,
-            customerId: newCustomer._id,
-            quantity: quantity,
-            chair: chair,
-            locationBus: locationBus,
-            phoneNumber: phoneNumber
-          }));
-          return res.json(saveticket);
-      }
-      else
-      {
-        const customerFind = await Customer.find({ phoneNumber: phoneNumber });
-        const saveticket = await ticketService.saveTicket( new Ticket(
-          {
-            vehicleRouteId: vehicleRouteId,
-            customerId: customerFind._id,
-            quantity: quantity,
-            chair: chair,
-            locationBus: locationBus,
-            phoneNumber: phoneNumber
-          }));
-          return res.json(saveticket);
+        const saveticket = await ticketService.saveTicket(
+          idPromotion,
+          vehicleRouteId,
+          newCustomer._id,
+          quantity,
+          chair,
+          locationBus,
+          phoneNumber,
+          discountAmount
+        );
+        return res.json(saveticket);
+      } else {
+        const customerFind = await Customer.findOne({
+          phoneNumber: phoneNumber,
+        });
+        console.log(customerFind._id);
+        const saveticket = await ticketService.saveTicket(
+          idPromotion,
+          vehicleRouteId,
+          customerFind._id,
+          quantity,
+          chair,
+          locationBus,
+          phoneNumber,
+          discountAmount
+        );
+        return res.json(saveticket);
       }
     } catch (error) {
       console.log(error);
@@ -78,80 +88,75 @@ class TicketController {
     try {
       const customer = await Ticket.aggregate([
         {
-          $lookup:
-          {
+          $lookup: {
             from: "customers",
             localField: "customerId",
             foreignField: "_id",
-            as: "customer"
+            as: "customer",
           },
         },
         {
-          "$unwind": "$customer",
+          $unwind: "$customer",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "vehicleroutes",
             localField: "vehicleRouteId",
             foreignField: "_id",
-            as: "vehicleroute"
+            as: "vehicleroute",
           },
         },
         {
-          "$unwind": "$vehicleroute",
+          $unwind: "$vehicleroute",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "places",
             localField: "vehicleroute.departure",
             foreignField: "_id",
-            as: "departure"
+            as: "departure",
           },
         },
         {
-          "$unwind": "$departure",
+          $unwind: "$departure",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "places",
             localField: "vehicleroute.destination",
             foreignField: "_id",
-            as: "destination"
+            as: "destination",
           },
         },
         {
-          "$unwind": "$destination",
+          $unwind: "$destination",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "cars",
             localField: "vehicleroute.carId",
             foreignField: "_id",
-            as: "car"
+            as: "car",
           },
         },
         {
-          "$unwind": "$car",
+          $unwind: "$car",
         },
         {
-          "$project": {
-            "_id": "$_id",
-            "firstName": "$customer.firstName",
-            "lastName": "$customer.lastName",
-            "phoneNumber": "$customer.phoneNumber",
-            "departure": "$departure.name",
-            "destination": "$destination.name",
-            "licensePlates": "$car.licensePlates",
-            "startDate": "$vehicleroute.startDate",
-            "locaDeparture": "$locationBus.locaDeparture",
-            "locaDestination": "$locationBus.locaDestination",
-            "chair": "$chair",
-            "createdAt": "$createdAt",
-            "updatedAt": "$updatedAt"
+          $project: {
+            _id: "$_id",
+            firstName: "$customer.firstName",
+            lastName: "$customer.lastName",
+            phoneNumber: "$customer.phoneNumber",
+            departure: "$departure.name",
+            destination: "$destination.name",
+            licensePlates: "$car.licensePlates",
+            startDate: "$vehicleroute.startDate",
+            locaDeparture: "$locationBus.locaDeparture",
+            locaDestination: "$locationBus.locaDestination",
+            chair: "$chair",
+            createdAt: "$createdAt",
+            updatedAt: "$updatedAt",
           },
         },
       ]);
@@ -161,6 +166,36 @@ class TicketController {
     }
   }
 
+  async getAllTicketByUserId(req, res, next) {
+    const { userId } = req.params;
+    console.log(userId);
+
+    try {
+      const listTicket = await ticketService.getTicketByUserId(userId);
+      var listTicketResult = [];
+      for (const ticket of listTicket) {
+        // get routeId
+        const { _id } = await Route.findOne({
+          "place._id": {
+            $all: [
+              ObjectId(ticket.departure._id),
+              ObjectId(ticket.destination._id),
+            ],
+          },
+        });
+        const { price } = await ticketService.checkPriceTicket(
+          ticket.startDate,
+          _id
+        );
+
+        listTicketResult.push({ ...ticket, price: price });
+      }
+
+      res.json(listTicketResult);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new TicketController();
