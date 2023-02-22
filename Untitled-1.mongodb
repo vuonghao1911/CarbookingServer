@@ -28,6 +28,13 @@
 //         }
 //       );
 db.tickets.aggregate([
+
+   {
+          $match: {
+            customerId: ObjectId("63edd1b210390b9dc1a53bc4"),
+            
+          },
+        },
         {
           $lookup: {
             from: "customers",
@@ -58,13 +65,15 @@ db.tickets.aggregate([
             as: "promotionresults",
           },
         },
-        {
-          $unwind: "$promotionresults",
+
+         {
+          $lookup: {
+            from: "promotions",
+            localField: "promotionresults.promotionId",
+            foreignField: "_id",
+            as: "promotions",
+          },
         },
-      {
-        $replaceWith: "$user",
-      },
-       
         {
           $lookup: {
             from: "places",
@@ -104,8 +113,8 @@ db.tickets.aggregate([
             firstName: "$customer.firstName",
             lastName: "$customer.lastName",
             phoneNumber: "$customer.phoneNumber",
-            departure: "$departure.name",
-            destination: "$destination.name",
+            departure: "$departure",
+            destination: "$destination",
             licensePlates: "$car.licensePlates",
             startDate: "$vehicleroute.startDate",
             endDate: "$vehicleroute.endDate",
@@ -115,7 +124,15 @@ db.tickets.aggregate([
             chair: "$chair",
             createdAt: "$createdAt",
             updatedAt: "$updatedAt",
-            promotion: "$promotionresults",
+            promotionresults: "$promotionresults",
+            promotions: "$promotions",
           },
         },
       ]);
+
+// db.prices.findOne({
+//       routeId: ObjectId("63e12dc694ff2132f39477d5"),
+//        startDate: { $lte: new Date("2023-02-10") },
+//       endDate: { $gte: new Date("2023-02-27") },
+     
+//     });

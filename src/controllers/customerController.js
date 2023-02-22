@@ -72,8 +72,8 @@ class CustomerController {
           },
         }
       );
-      console.log(true);
-      return res.json(true);
+      const customer = await Customer.findById(id);
+      return res.json(customer);
     } catch (error) {
       console.log(error);
       next(error);

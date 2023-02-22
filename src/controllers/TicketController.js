@@ -4,6 +4,8 @@ const Ticket = require("../modal/Ticket");
 const Customer = require("../modal/Customer");
 const VehicleRoute = require("../modal/VehicleRoute");
 const Route = require("../modal/Route");
+const PromotionResults = require("../modal/PromotionResult");
+
 class TicketController {
   async bookingTicket(req, res, next) {
     const {
@@ -175,7 +177,7 @@ class TicketController {
       var listTicketResult = [];
       for (const ticket of listTicket) {
         // get routeId
-        const { _id } = await Route.findOne({
+        const { _id, intendTime } = await Route.findOne({
           "place._id": {
             $all: [
               ObjectId(ticket.departure._id),
@@ -188,10 +190,53 @@ class TicketController {
           _id
         );
 
-        listTicketResult.push({ ...ticket, price: price });
+        listTicketResult.push({
+          ...ticket,
+          price: price,
+          intendTime: intendTime,
+        });
       }
 
       res.json(listTicketResult);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async CanceledTicket(req, res, next) {
+    const { ticketId } = req.params;
+
+    try {
+      // get idPromotion
+      const promotionresults = await PromotionResults.findOne({
+        ticketId: ticketId,
+      });
+
+      const { chair, vehicleRouteId } = await Ticket.findById(ticketId);
+
+      if (vehicleRouteId) {
+        if (promotionresults) {
+          await ticketService.cancleTicket(
+            ticketId,
+            promotionresults.promotionId,
+            chair,
+            vehicleRouteId,
+            promotionresults.discountAmount
+          );
+        } else {
+          await ticketService.cancleTicket(
+            ticketId,
+            null,
+            chair,
+            vehicleRouteId,
+            null
+          );
+        }
+
+        res.json({ cancleTicket: true });
+      } else {
+        res.json({ cancleTicket: false });
+      }
     } catch (error) {
       next(error);
     }

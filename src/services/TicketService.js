@@ -2,6 +2,7 @@ const Ticket = require("../modal/Ticket");
 const PromotionService = require("../services/PromotionService");
 const Promotion = require("../modal/Promotion");
 const Price = require("../modal/Price");
+const VehicleRoute = require("../modal/VehicleRoute");
 const ObjectId = require("mongoose").Types.ObjectId;
 const TicketService = {
   saveTicket: async (
@@ -176,6 +177,42 @@ const TicketService = {
       startDate: { $lte: new Date(createdDate) },
     });
     return price;
+  },
+
+  cancleTicket: async (
+    idTicket,
+    idPromotion,
+    chair,
+    vehicleRouteId,
+    discountAmount
+  ) => {
+    if (idPromotion) {
+      console.log(idPromotion);
+      const { budget } = await Promotion.findById(idPromotion);
+      var budgetUpdate = budget + discountAmount;
+      await Promotion.updateOne(
+        { _id: idPromotion },
+        {
+          $set: {
+            budget: budgetUpdate,
+          },
+        }
+      );
+    }
+    const result = await Promise.all(
+      chair.map((e) => {
+        const name = e.seats;
+        const matchedCount = VehicleRoute.updateOne(
+          { _id: ObjectId(vehicleRouteId) },
+          {
+            $set: { ["chair.$[elem].status"]: false },
+          },
+          { arrayFilters: [{ "elem.seats": name }] }
+        );
+        return matchedCount;
+      })
+    );
+    await Ticket.updateOne({ _id: idTicket }, { $set: { status: false } });
   },
 };
 
