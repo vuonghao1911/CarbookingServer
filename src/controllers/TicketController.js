@@ -1,8 +1,12 @@
 const ticketService = require("../services/TicketService");
 const ObjectId = require("mongoose").Types.ObjectId;
+var mongoose = require('mongoose');
 const Ticket = require("../modal/Ticket");
 const Customer = require("../modal/Customer");
 const VehicleRoute = require("../modal/VehicleRoute");
+
+const moment = require('moment');
+
 const Route = require("../modal/Route");
 const PromotionResults = require("../modal/PromotionResult");
 
@@ -41,32 +45,30 @@ class TicketController {
           phoneNumber: phoneNumber,
         });
         const newCustomer = await customerAdd.save();
-        const saveticket = await ticketService.saveTicket(
-          idPromotion,
-          vehicleRouteId,
-          newCustomer._id,
-          quantity,
-          chair,
-          locationBus,
-          phoneNumber,
-          discountAmount
-        );
+
+        const saveticket = await ticketService.saveTicket(new Ticket(
+          {
+            vehicleRouteId: vehicleRouteId,
+            customerId: newCustomer._id,
+            quantity: quantity,
+            chair: chair,
+            locationBus: locationBus,
+            phoneNumber: phoneNumber
+          }));
         return res.json(saveticket);
-      } else {
-        const customerFind = await Customer.findOne({
-          phoneNumber: phoneNumber,
-        });
-        console.log(customerFind._id);
-        const saveticket = await ticketService.saveTicket(
-          idPromotion,
-          vehicleRouteId,
-          customerFind._id,
-          quantity,
-          chair,
-          locationBus,
-          phoneNumber,
-          discountAmount
-        );
+      }
+      else {
+        const customerFind = await Customer.find({ phoneNumber: phoneNumber });
+        const saveticket = await ticketService.saveTicket(new Ticket(
+          {
+            vehicleRouteId: vehicleRouteId,
+            customerId: customerFind._id,
+            quantity: quantity,
+            chair: chair,
+            locationBus: locationBus,
+            phoneNumber: phoneNumber
+          }));
+
         return res.json(saveticket);
       }
     } catch (error) {
@@ -87,8 +89,9 @@ class TicketController {
     }
   }
   async getTicket(req, res, next) {
+    let listTicket = new Array();
     try {
-      const customer = await Ticket.aggregate([
+      const tickets = await Ticket.aggregate([
         {
           $lookup: {
             from: "customers",
@@ -145,6 +148,32 @@ class TicketController {
           $unwind: "$car",
         },
         {
+
+          $lookup:
+          {
+            from: "routes",
+            localField: "car.typeCarId",
+            foreignField: "carTypeId",
+            as: "route"
+          },
+        },
+        {
+          "$unwind": "$route"
+        },
+        {
+          $lookup:
+          {
+            from: "prices",
+            localField: "route._id",
+            foreignField: "routeId",
+            as: "price"
+          },
+        },
+        {
+          "$unwind": "$price"
+        },
+        {
+
           $project: {
             _id: "$_id",
             firstName: "$customer.firstName",
@@ -159,13 +188,18 @@ class TicketController {
             chair: "$chair",
             createdAt: "$createdAt",
             updatedAt: "$updatedAt",
+
           },
         },
       ]);
-      res.json(customer);
-    } catch (error) {
-      next(error);
-    }
+      tickets.map(ticket => {
+        if(new Date(ticket.startDate) > new Date(ticket.price.startDate) && new Date(ticket.startDate) < new Date(ticket.price.endDate))
+          listTicket.push(ticket);
+      })
+      res.json(listTicket);
+} catch (error) {
+  next(error);
+}
   }
 
   async getAllTicketByUserId(req, res, next) {
