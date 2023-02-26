@@ -24,6 +24,7 @@ class AccountController {
       const checkRegister = await AccountService.checkPhoneNumber(phoneNumber);
       const salt = await AccountService.generateSalt();
       const passHash = await AccountService.hashPassword(passWord, salt);
+      const customerFind = await Customer.findOne({ phoneNumber: phoneNumber });
       if (checkRegister != null) {
         return res.json({ checkRegister: false });
       } else {
@@ -42,6 +43,15 @@ class AccountController {
             passWord: passHash,
             role: role,
             idUser: _id,
+          });
+          const saveAccount = await AccountService.saveAccount(account);
+          newAccount = { user: saveAccount, checkRegister: true };
+        } else if (customerFind) {
+          const account = new Account({
+            phoneNumber: phoneNumber,
+            passWord: passHash,
+            role: role,
+            idUser: customerFind._id,
           });
           const saveAccount = await AccountService.saveAccount(account);
           newAccount = { user: saveAccount, checkRegister: true };
