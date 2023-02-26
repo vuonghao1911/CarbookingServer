@@ -1,8 +1,10 @@
 const ticketService = require("../services/TicketService");
 const ObjectId = require("mongoose").Types.ObjectId;
+var mongoose = require('mongoose');
 const Ticket = require("../modal/Ticket");
 const Customer = require("../modal/Customer");
 const VehicleRoute = require("../modal/VehicleRoute");
+const moment = require('moment');
 class TicketController {
   async bookingTicket(req, res, next) {
     const {
@@ -41,12 +43,11 @@ class TicketController {
             locationBus: locationBus,
             phoneNumber: phoneNumber
           }));
-          return res.json(saveticket);
+        return res.json(saveticket);
       }
-      else
-      {
+      else {
         const customerFind = await Customer.find({ phoneNumber: phoneNumber });
-        const saveticket = await ticketService.saveTicket( new Ticket(
+        const saveticket = await ticketService.saveTicket(new Ticket(
           {
             vehicleRouteId: vehicleRouteId,
             customerId: customerFind._id,
@@ -55,7 +56,7 @@ class TicketController {
             locationBus: locationBus,
             phoneNumber: phoneNumber
           }));
-          return res.json(saveticket);
+        return res.json(saveticket);
       }
     } catch (error) {
       console.log(error);
@@ -75,8 +76,9 @@ class TicketController {
     }
   }
   async getTicket(req, res, next) {
+    let listTicket = new Array();
     try {
-      const customer = await Ticket.aggregate([
+      const tickets = await Ticket.aggregate([
         {
           $lookup:
           {
@@ -138,6 +140,30 @@ class TicketController {
           "$unwind": "$car",
         },
         {
+          $lookup:
+          {
+            from: "routes",
+            localField: "car.typeCarId",
+            foreignField: "carTypeId",
+            as: "route"
+          },
+        },
+        {
+          "$unwind": "$route"
+        },
+        {
+          $lookup:
+          {
+            from: "prices",
+            localField: "route._id",
+            foreignField: "routeId",
+            as: "price"
+          },
+        },
+        {
+          "$unwind": "$price"
+        },
+        {
           "$project": {
             "_id": "$_id",
             "firstName": "$customer.firstName",
@@ -150,15 +176,20 @@ class TicketController {
             "locaDeparture": "$locationBus.locaDeparture",
             "locaDestination": "$locationBus.locaDestination",
             "chair": "$chair",
+            "price": "$price",
             "createdAt": "$createdAt",
             "updatedAt": "$updatedAt"
           },
         },
       ]);
-      res.json(customer);
-    } catch (error) {
-      next(error);
-    }
+      tickets.map(ticket => {
+        if(new Date(ticket.startDate) > new Date(ticket.price.startDate) && new Date(ticket.startDate) < new Date(ticket.price.endDate))
+          listTicket.push(ticket);
+      })
+      res.json(listTicket);
+} catch (error) {
+  next(error);
+}
   }
 
 }
