@@ -121,7 +121,7 @@ class VehicleRouteController {
             "carType": "$cartype.type",
             "price": "$price",
             "chair": "$chair",
-            "promotions": "$promotions.title"
+            "promotions": "$promotions"
           },
         },]);
       vehicleRoute.map(vehicleRoute => {

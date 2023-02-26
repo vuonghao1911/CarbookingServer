@@ -10,6 +10,129 @@
 // {arrayFilters:[{"elem._id":ObjectId("63b281f4d571739a200fac6f")}]}
 // )
 // db.accounts.find({$and:[{phoneNumber:"0123654874"},{passWord:"111111"}]})
-db.accounts.findOne({
-      phoneNumber: "0123654874",
-    });
+// db.accounts.findOne({
+//       phoneNumber: "0123654874",
+//     });
+// db.vehicleroutes.find({ "startDate" : { "$gte" : new Date("2023-02-12")},"startDate":{ "$lt" : new Date("2023-02-20") }})
+// db.routes.findOne({
+//     "place._id": { $all: [ObjectId("63e73ce9bebc9275779e8b96"), ObjectId("63da8c5cee09e7dba6d76fb1")] },
+//   });
+
+// db.promotions.updateOne(
+//         { _id: ObjectId("63e22963dff2ca2471469460") },
+//         {
+//           $set: {
+//             budget: 1000000,
+         
+//           },
+//         }
+//       );
+db.tickets.aggregate([
+
+   {
+          $match: {
+            customerId: ObjectId("63edd1b210390b9dc1a53bc4"),
+            
+          },
+        },
+        {
+          $lookup: {
+            from: "customers",
+            localField: "customerId",
+            foreignField: "_id",
+            as: "customer",
+          },
+        },
+        {
+          $unwind: "$customer",
+        },
+        {
+          $lookup: {
+            from: "vehicleroutes",
+            localField: "vehicleRouteId",
+            foreignField: "_id",
+            as: "vehicleroute",
+          },
+        },
+         {
+          $unwind: "$vehicleroute",
+        },
+         {
+          $lookup: {
+            from: "promotionresults",
+            localField: "_id",
+            foreignField: "ticketId",
+            as: "promotionresults",
+          },
+        },
+
+         {
+          $lookup: {
+            from: "promotions",
+            localField: "promotionresults.promotionId",
+            foreignField: "_id",
+            as: "promotions",
+          },
+        },
+        {
+          $lookup: {
+            from: "places",
+            localField: "vehicleroute.departure",
+            foreignField: "_id",
+            as: "departure",
+          },
+        },
+        {
+          $unwind: "$departure",
+        },
+        {
+          $lookup: {
+            from: "places",
+            localField: "vehicleroute.destination",
+            foreignField: "_id",
+            as: "destination",
+          },
+        },
+        {
+          $unwind: "$destination",
+        },
+        {
+          $lookup: {
+            from: "cars",
+            localField: "vehicleroute.carId",
+            foreignField: "_id",
+            as: "car",
+          },
+        },
+        {
+          $unwind: "$car",
+        },
+        {
+          $project: {
+            _id: "$_id",
+            firstName: "$customer.firstName",
+            lastName: "$customer.lastName",
+            phoneNumber: "$customer.phoneNumber",
+            departure: "$departure",
+            destination: "$destination",
+            licensePlates: "$car.licensePlates",
+            startDate: "$vehicleroute.startDate",
+            endDate: "$vehicleroute.endDate",
+            status:"$status",
+            locaDeparture: "$locationBus.locaDeparture",
+            locaDestination: "$locationBus.locaDestination",
+            chair: "$chair",
+            createdAt: "$createdAt",
+            updatedAt: "$updatedAt",
+            promotionresults: "$promotionresults",
+            promotions: "$promotions",
+          },
+        },
+      ]);
+
+// db.prices.findOne({
+//       routeId: ObjectId("63e12dc694ff2132f39477d5"),
+//        startDate: { $lte: new Date("2023-02-10") },
+//       endDate: { $gte: new Date("2023-02-27") },
+     
+//     });
