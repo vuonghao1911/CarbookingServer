@@ -9,7 +9,15 @@ const routeSchema = new Schema({
   intendTime: {
     type: Number,
   },
-  place: [],
+  departure: {},
+  destination: {},
+  status: {
+    type: Boolean,
+    default: true,
+  },
+  code: {
+    type: String,
+  },
 });
 
 const Route = mongoose.model("Route", routeSchema);

@@ -14,6 +14,20 @@ const customerSchema = new Schema({
   phoneNumber: {
     type: String,
   },
+
+  address: {
+    type: {
+      ward: {
+        type: String,
+      },
+      district: {
+        type: String,
+      },
+      province: {
+        type: String,
+      },
+    },
+  },
 });
 
 //check userId

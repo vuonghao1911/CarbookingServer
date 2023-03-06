@@ -28,7 +28,7 @@ const employeeSchema = new Schema({
       district: {
         type: String,
       },
-      city: {
+      province: {
         type: String,
       },
     },
@@ -36,6 +36,10 @@ const employeeSchema = new Schema({
   gender: {
     type: Boolean,
     default: false,
+  },
+  status: {
+    type: Boolean,
+    default: true,
   },
 });
 

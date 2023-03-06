@@ -18,6 +18,39 @@ const PromotionService = {
     });
     return await promotionResult.save();
   },
+  getPromotion: async () => {
+    const promotion = await Promotion.aggregate([
+      {
+        $lookup: {
+          from: "routes",
+          localField: "routeId",
+          foreignField: "_id",
+          as: "route",
+        },
+      },
+      {
+        $unwind: "$route",
+      },
+      {
+        $project: {
+          _id: "$_id",
+          startDate: "$startDate",
+          endDate: "$endDate",
+          budget: "$budget",
+          quantityTicket: "$quantityTicket",
+          maximumDiscount: "$maximumDiscount",
+          moneyReduced: "$moneyReduced",
+          purchaseAmount: "$purchaseAmount",
+          percentDiscount: "$percentDiscount",
+          title: "$title",
+          departure: "$route.departure",
+          destination: "$route.destination",
+        },
+      },
+    ]);
+
+    return promotion;
+  },
 };
 
 module.exports = PromotionService;

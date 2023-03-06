@@ -2,13 +2,14 @@ const customerService = require("../services/customerService");
 const Customer = require("../modal/Customer");
 class CustomerController {
   async addCustomer(req, res, next) {
-    const { firstName, lastName, phoneNumber } = req.body;
+    const { firstName, lastName, phoneNumber, address } = req.body;
     //console.log(number);
     try {
       const customer = new Customer({
         firstName: firstName,
         lastName: lastName,
         phoneNumber: phoneNumber,
+        address: address,
       });
 
       const savecustomer = await customerService.addCustomer(customer);
@@ -48,6 +49,7 @@ class CustomerController {
             firstName: "$firstName",
             lastName: "$lastName",
             phoneNumber: "$phoneNumber",
+            address: "$address",
             quantityTicket: { $size: "$tickets" },
           },
         },

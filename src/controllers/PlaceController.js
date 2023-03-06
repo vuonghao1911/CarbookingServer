@@ -4,12 +4,13 @@ const Route = require("../modal/Route");
 
 class PlaceController {
   async addPlace(req, res, next) {
-    const { name, busStation } = req.body;
+    const { name, busStation, code } = req.body;
     //console.log(number);
     try {
       const place = new Place({
         name: name,
         busStation: busStation,
+        code: code,
       });
 
       const saveplace = await placeService.savePlace(place);
@@ -22,24 +23,29 @@ class PlaceController {
   }
 
   async addRoute(req, res, next) {
-    const { carTypeId, intendTime, placeId} = req.body;
+    const { carTypeId, intendTime, departureId, destinationId, code } =
+      req.body;
     //console.log(number);
 
-    const Arrayplace = await Promise.all(
-      placeId.map((e) => {
-        const place = Place.findById(e.id);
-        return place;
-      })
-    );
+    // const Arrayplace = await Promise.all(
+    //   placeId.map((e) => {
+    //     const place = Place.findById(e.id);
+    //     return place;
+    //   })
+    // );
+    const departure = await Place.findById(departureId);
+    const destination = await Place.findById(destinationId);
 
     try {
       const route = new Route({
         carTypeId: carTypeId,
         intendTime: intendTime,
-        place: Arrayplace
+        departure: departure,
+        destination: destination,
+        code: code,
       });
       const saveRoute = await placeService.saveRoute(route);
-      return res.json("Thành công!");
+      return res.json(saveRoute);
     } catch (error) {
       console.log(error);
       next(error);
@@ -69,20 +75,24 @@ class PlaceController {
     try {
       const route = await Route.aggregate([
         {
-          $lookup:
-          {
+          $lookup: {
             from: "cartypes",
             localField: "carTypeId",
             foreignField: "_id",
-            as: "cartype"
+            as: "cartype",
           },
         },
+        { $unwind: "$cartype" },
         {
-          "$project": {
-            "_id": "$_id",
-            "carType": "$cartype",
-            "intendTime": "$intendTime",
-            "place": "$place"
+          $project: {
+            _id: "$_id",
+            carType: "$cartype.type",
+            intendTime: "$intendTime",
+            route: "$route",
+            departure: "$departure",
+            destination: "$destination",
+            status: "$status",
+            code: "$code",
           },
         },
       ]);

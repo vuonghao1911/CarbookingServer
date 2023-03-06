@@ -1,16 +1,16 @@
 const vehicleRouteService = require("../services/VehicleRouteService");
 const Customer = require("../modal/Customer");
-var mongoose = require('mongoose');
+const ObjectId = require("mongoose").Types.ObjectId;
 const Route = require("../modal/Route");
 const VehicleRoute = require("../modal/VehicleRoute");
 class VehicleRouteController {
   async addVehicleRoute(req, res, next) {
-    const { startDate, endDate, routeId, arrayId} = req.body;
+    const { startDate, endDate, routeId, arrayId } = req.body;
     console.log(routeId);
     try {
       const routeChoose = await Route.findById(routeId);
-      const departure = routeChoose.place[0]._id;
-      const destination = routeChoose.place[1]._id;
+      const departure = routeChoose.departure._id;
+      const destination = routeChoose.destination._id;
       const route = await vehicleRouteService.addRoutes(
         startDate,
         endDate,
@@ -26,109 +26,42 @@ class VehicleRouteController {
     }
   }
   async searchVehicleRoute(req, res, next) {
-    let vehicleRouteSearch = new Array();
+    const { departure, destination, startDate } = req.body;
+    let vehicleRouteSearch = [];
     try {
-      const vehicleRoute = await VehicleRoute.aggregate([
-        { $match: { "departure": new mongoose.Types.ObjectId(req.body.departure), "destination": new mongoose.Types.ObjectId(req.body.destination) } }, {
-          $lookup:
-          {
-            from: "cars",
-            localField: "carId",
-            foreignField: "_id",
-            as: "car"
-          },
-        },
-        {
-          "$unwind": "$car",
-        },
-        {
-          $lookup:
-          {
-            from: "places",
-            localField: "departure",
-            foreignField: "_id",
-            as: "departure"
-          },
-        },
-        {
-          "$unwind": "$departure"
-        },
-        {
-          $lookup:
-          {
-            from: "places",
-            localField: "destination",
-            foreignField: "_id",
-            as: "destination"
-          },
-        },
-        {
-          "$unwind": "$destination"
-        },
-        {
-          $lookup:
-          {
-            from: "cartypes",
-            localField: "car.typeCarId",
-            foreignField: "_id",
-            as: "cartype"
-          },
-        },
-        {
-          "$unwind": "$cartype"
-        },
-        {
-          $lookup:
-          {
-            from: "routes",
-            localField: "car.typeCarId",
-            foreignField: "carTypeId",
-            as: "route"
-          },
-        },
-        {
-          "$unwind": "$route"
-        },
-        {
-          $lookup:
-          {
-            from: "prices",
-            localField: "route._id",
-            foreignField: "routeId",
-            as: "price"
-          },
-        },
-        {
-          "$unwind": "$price"
-        },
-        {
-          $lookup:
-          {
-            from: "promotions",
-            localField: "route._id",
-            foreignField: "routeId",
-            as: "promotions"
-          },
-        },
-        {
-          "$project": {
-            "_id": "$_id",
-            "startDate": "$startDate",
-            "endDate": "$endDate",
-            "departure": "$departure",
-            "destination": "$destination",
-            "licensePlates": "$car.licensePlates",
-            "carType": "$cartype.type",
-            "price": "$price",
-            "chair": "$chair",
-            "promotions": "$promotions"
-          },
-        },]);
-      vehicleRoute.map(vehicleRoute => {
-        if (new Date(new Date(vehicleRoute.startDate).getTime() - (7 * 3600 * 1000)).toLocaleDateString() === new Date(new Date(req.body.startDate).getTime() - (7 * 3600 * 1000)).toLocaleDateString()) {
-          vehicleRouteSearch.push(vehicleRoute);
+      const vehicleRoute = await vehicleRouteService.findVehicleRoute(
+        departure,
+        destination
+      );
+      const { _id, intendTime } = await Route.findOne({
+        "departure._id": ObjectId(departure),
+        "destination._id": ObjectId(destination),
+      });
+      const { price } = await vehicleRouteService.checkPriceRoute(
+        startDate,
+        _id
+      );
+      const promotion = await vehicleRouteService.checkPromotionsRoute(
+        startDate,
+        _id
+      );
+      vehicleRoute.map((vehicleRoute) => {
+        if (
+          new Date(
+            new Date(vehicleRoute.startDate).getTime() - 7 * 3600 * 1000
+          ).toLocaleDateString() ===
+          new Date(
+            new Date(req.body.startDate).getTime() - 7 * 3600 * 1000
+          ).toLocaleDateString()
+        ) {
+          vehicleRouteSearch.push({
+            ...vehicleRoute,
+            intendTime,
+            price,
+            promotion,
+          });
         }
-      })
+      });
       res.json(vehicleRouteSearch);
     } catch (error) {
       next(error);
@@ -150,88 +83,82 @@ class VehicleRouteController {
     try {
       const vehicleRoute = await VehicleRoute.aggregate([
         {
-          $lookup:
-          {
+          $lookup: {
             from: "cars",
             localField: "carId",
             foreignField: "_id",
-            as: "car"
+            as: "car",
           },
         },
         {
-          "$unwind": "$car",
+          $unwind: "$car",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "places",
             localField: "departure",
             foreignField: "_id",
-            as: "departure"
+            as: "departure",
           },
         },
         {
-          "$unwind": "$departure"
+          $unwind: "$departure",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "places",
             localField: "destination",
             foreignField: "_id",
-            as: "destination"
+            as: "destination",
           },
         },
         {
-          "$unwind": "$destination"
+          $unwind: "$destination",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "cartypes",
             localField: "car.typeCarId",
             foreignField: "_id",
-            as: "cartype"
+            as: "cartype",
           },
         },
         {
-          "$unwind": "$cartype"
+          $unwind: "$cartype",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "routes",
             localField: "car.typeCarId",
             foreignField: "carTypeId",
-            as: "route"
+            as: "route",
           },
         },
         {
-          "$unwind": "$route"
+          $unwind: "$route",
         },
         {
-          $lookup:
-          {
+          $lookup: {
             from: "prices",
             localField: "route._id",
             foreignField: "routeId",
-            as: "price"
+            as: "price",
           },
         },
         {
-          "$unwind": "$price"
+          $unwind: "$price",
         },
         {
-          "$project": {
-            "_id": "$_id",
-            "startDate": "$startDate",
-            "endDate": "$endDate",
-            "departure": "$departure",
-            "destination": "$destination",
-            "licensePlates": "$car.licensePlates",
-            "carType": "$cartype.type",
-            "price": "$price",
-            "chair": "$chair"
+          $project: {
+            _id: "$_id",
+            startDate: "$startDate",
+            endDate: "$endDate",
+            departure: "$departure",
+            destination: "$destination",
+            licensePlates: "$car.licensePlates",
+            carType: "$cartype.type",
+            price: "$price",
+            chair: "$chair",
           },
         },
       ]);

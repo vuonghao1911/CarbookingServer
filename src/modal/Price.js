@@ -3,6 +3,9 @@ const Schema = mongoose.Schema;
 const ObjectId = mongoose.Types.ObjectId;
 
 const priceSchema = new Schema({
+  title: {
+    type: String,
+  },
   startDate: {
     type: Date,
     default: new Date(),

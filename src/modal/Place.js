@@ -4,15 +4,32 @@ const ObjectId = mongoose.Types.ObjectId;
 
 const placeSchema = new Schema({
   name: {
-    type: String
+    type: String,
   },
   busStation: [
     {
-      location: {
-        type: String,
+      address: {
+        name: {
+          type: String,
+        },
+        detailAddress: {
+          type: String,
+        },
+        ward: {
+          type: String,
+        },
+        district: {
+          type: String,
+        },
+        province: {
+          type: String,
+        },
       },
     },
   ],
+  code: {
+    type: String,
+  },
 });
 
 const Place = mongoose.model("Place", placeSchema);

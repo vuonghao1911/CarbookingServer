@@ -36,16 +36,16 @@ class AccountController {
             typeId: typeId,
             address: address,
           });
-          const { _id } = await EmployeeService.saveEmployee(employee);
+          const user = await EmployeeService.saveEmployee(employee);
 
           const account = new Account({
             phoneNumber: phoneNumber,
             passWord: passHash,
             role: role,
-            idUser: _id,
+            idUser: user._id,
           });
           const saveAccount = await AccountService.saveAccount(account);
-          newAccount = { user: saveAccount, checkRegister: true };
+          newAccount = { user: user, checkRegister: true };
         } else if (customerFind) {
           const account = new Account({
             phoneNumber: phoneNumber,
@@ -54,22 +54,23 @@ class AccountController {
             idUser: customerFind._id,
           });
           const saveAccount = await AccountService.saveAccount(account);
-          newAccount = { user: saveAccount, checkRegister: true };
+          newAccount = { user: customerFind, checkRegister: true };
         } else {
           const customer = new Customer({
             firstName: firstName,
             lastName: lastName,
             phoneNumber: phoneNumber,
+            address: address,
           });
-          const { _id } = await CustomerService.addCustomer(customer);
+          const user = await CustomerService.addCustomer(customer);
           const account = new Account({
             phoneNumber: phoneNumber,
             passWord: passHash,
             role: role,
-            idUser: _id,
+            idUser: user._id,
           });
           const saveAccount = await AccountService.saveAccount(account);
-          newAccount = { user: saveAccount, checkRegister: true };
+          newAccount = { user: user, checkRegister: true };
         }
       }
 

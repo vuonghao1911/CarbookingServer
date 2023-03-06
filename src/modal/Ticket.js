@@ -15,14 +15,7 @@ const ticketSchema = new Schema(
       type: Number,
     },
     chair: [],
-    locationBus: {
-      locaDeparture: {
-        type: String,
-      },
-      locaDestination: {
-        type: String,
-      },
-    },
+    locationBus: {},
     status: {
       type: Boolean,
       default: true,
