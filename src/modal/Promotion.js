@@ -46,6 +46,9 @@ const promotionSchema = new Schema({
   promotionType: {
     type: ObjectId,
   },
+  code: {
+    type: Number,
+  },
 });
 
 const Promotion = mongoose.model("Promotion", promotionSchema);

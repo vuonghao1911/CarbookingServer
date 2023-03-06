@@ -22,6 +22,7 @@ class PromotionController {
     var status;
     var message = "Success";
     var Isexists;
+    const code = await Promotion.countDocuments();
     try {
       if (new Date(startDate) > new Date()) {
         status = false;
@@ -41,6 +42,7 @@ class PromotionController {
         maximumDiscount: maximumDiscount,
         budget: budget,
         promotionType: promotionType,
+        code: code + 1,
       });
 
       const promotionsFind = await Promotion.find({ routeId: routeId });

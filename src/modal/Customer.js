@@ -28,6 +28,9 @@ const customerSchema = new Schema({
       },
     },
   },
+  code: {
+    type: Number,
+  },
 });
 
 //check userId

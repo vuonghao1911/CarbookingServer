@@ -51,6 +51,7 @@ class EmployeeController {
   async addEmployee(req, res, next) {
     const { firstName, lastName, phoneNumber, typeId, address } = req.body;
     //console.log(number);
+    const code = await Employee.countDocuments();
     try {
       const employee = new Employee({
         firstName: firstName,
@@ -58,6 +59,7 @@ class EmployeeController {
         phoneNumber: phoneNumber,
         typeId: typeId,
         address: address,
+        code: code + 1,
       });
 
       const saveEmp = await employeeService.saveEmployee(employee);

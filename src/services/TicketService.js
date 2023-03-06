@@ -13,7 +13,8 @@ const TicketService = {
     chair,
     locationBus,
     phoneNumber,
-    discountAmount
+    discountAmount,
+    code
   ) => {
     var ticketSave;
     if (idPromotion) {
@@ -24,6 +25,7 @@ const TicketService = {
         chair: chair,
         locationBus: locationBus,
         phoneNumber: phoneNumber,
+        code: code + 1,
       });
 
       ticketSave = await ticket.save();
@@ -50,6 +52,7 @@ const TicketService = {
         chair: chair,
         locationBus: locationBus,
         phoneNumber: phoneNumber,
+        code: code + 1,
       });
       ticketSave = await ticket.save();
     }

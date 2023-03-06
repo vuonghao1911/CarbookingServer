@@ -7,6 +7,7 @@ class PriceController {
     var status;
     var message = "Success";
     var Isexists;
+    const code = Price.countDocuments();
     try {
       if (new Date(startDate) > new Date()) {
         status = false;
@@ -20,6 +21,7 @@ class PriceController {
         routeId: routeId,
         title: title,
         status: status,
+        code: code + 1,
       };
       const priceFind = await Price.find({ routeId: routeId });
       console.log(priceFind);

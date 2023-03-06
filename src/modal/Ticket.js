@@ -23,6 +23,9 @@ const ticketSchema = new Schema(
     phoneNumber: {
       type: String,
     },
+    code: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );

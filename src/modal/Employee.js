@@ -41,6 +41,9 @@ const employeeSchema = new Schema({
     type: Boolean,
     default: true,
   },
+  code: {
+    type: Number,
+  },
 });
 
 const Employee = mongoose.model("Employee", employeeSchema);

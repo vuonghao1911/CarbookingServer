@@ -13,6 +13,7 @@ const VehicleRouteService = {
     intendTime,
     arrayId
   ) => {
+    const code = await VehicleRoute.countDocuments();
     let startDateNew = new Date(
       new Date(startDate).getTime() + 7 * 3600 * 1000
     );
@@ -30,6 +31,7 @@ const VehicleRouteService = {
             destination: destination,
             carId: arrayId[i].id,
             chair: chair,
+            code: code + 1,
           });
           vehicleRoute.save();
           startDateNew = new Date(
@@ -46,6 +48,7 @@ const VehicleRouteService = {
             destination: departure,
             carId: arrayId[i].id,
             chair: chair,
+            code: code + 1,
           });
           vehicleRoute.save();
           startDateNew = new Date(

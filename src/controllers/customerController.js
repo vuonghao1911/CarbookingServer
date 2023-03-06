@@ -3,6 +3,7 @@ const Customer = require("../modal/Customer");
 class CustomerController {
   async addCustomer(req, res, next) {
     const { firstName, lastName, phoneNumber, address } = req.body;
+    const code = await Customer.countDocuments();
     //console.log(number);
     try {
       const customer = new Customer({
@@ -10,6 +11,7 @@ class CustomerController {
         lastName: lastName,
         phoneNumber: phoneNumber,
         address: address,
+        code: code + 1,
       });
 
       const savecustomer = await customerService.addCustomer(customer);

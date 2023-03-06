@@ -23,6 +23,8 @@ class TicketController {
       idPromotion,
     } = req.body;
     console.log(chair);
+    const code = await Ticket.countDocuments();
+
     try {
       const Arrayplace = await Promise.all(
         chair.map((e) => {
@@ -54,7 +56,8 @@ class TicketController {
           chair,
           locationBus,
           phoneNumber,
-          discountAmount
+          discountAmount,
+          code
         );
         return res.json(saveticket);
       } else {
@@ -70,7 +73,8 @@ class TicketController {
           chair,
           locationBus,
           phoneNumber,
-          discountAmount
+          discountAmount,
+          code
         );
 
         return res.json(saveticket);

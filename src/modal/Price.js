@@ -24,6 +24,9 @@ const priceSchema = new Schema({
   routeId: {
     type: ObjectId,
   },
+  code: {
+    type: Number,
+  },
 });
 
 const Price = mongoose.model("Price", priceSchema);

@@ -19,6 +19,9 @@ const vehicleRouteSchema = new Schema({
     type: ObjectId,
   },
   chair: [],
+  code: {
+    type: Number,
+  },
 });
 
 const VehicleRoute = mongoose.model("VehicleRoute", vehicleRouteSchema);

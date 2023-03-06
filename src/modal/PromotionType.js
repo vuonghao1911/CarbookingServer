@@ -6,6 +6,9 @@ const promotionTypeSchema = new Schema({
   name: {
     type: String,
   },
+  code: {
+    type: Number,
+  },
 });
 
 const PromotionType = mongoose.model("PromotionType", promotionTypeSchema);
