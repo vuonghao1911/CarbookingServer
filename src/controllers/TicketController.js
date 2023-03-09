@@ -23,7 +23,14 @@ class TicketController {
       idPromotion,
     } = req.body;
     console.log(chair);
-    const code = await Ticket.countDocuments();
+    console.log(customer);
+    const codeFind = await Ticket.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
 
     try {
       const Arrayplace = await Promise.all(

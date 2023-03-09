@@ -51,7 +51,13 @@ class EmployeeController {
   async addEmployee(req, res, next) {
     const { firstName, lastName, phoneNumber, typeId, address } = req.body;
     //console.log(number);
-    const code = await Employee.countDocuments();
+    const codeFind = await Employee.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
     try {
       const employee = new Employee({
         firstName: firstName,

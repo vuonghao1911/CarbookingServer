@@ -3,7 +3,14 @@ const Customer = require("../modal/Customer");
 class CustomerController {
   async addCustomer(req, res, next) {
     const { firstName, lastName, phoneNumber, address } = req.body;
-    const code = await Customer.countDocuments();
+    const codeFind = await Customer.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
+
     //console.log(number);
     try {
       const customer = new Customer({

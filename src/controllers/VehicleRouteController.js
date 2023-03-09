@@ -45,6 +45,9 @@ class VehicleRouteController {
         startDate,
         _id
       );
+
+      console.log("Promotion", promotion);
+      console.log("id", _id);
       vehicleRoute.map((vehicleRoute) => {
         if (
           new Date(

@@ -13,7 +13,13 @@ const VehicleRouteService = {
     intendTime,
     arrayId
   ) => {
-    const code = await VehicleRoute.countDocuments();
+    const codeFind = await VehicleRoute.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
     let startDateNew = new Date(
       new Date(startDate).getTime() + 7 * 3600 * 1000
     );

@@ -130,7 +130,13 @@ class PromotionController {
   }
   async addPromotionResult(req, res, next) {
     const { promotionId, ticketId, discountAmount } = req.body;
-
+    const codeFind = await Promotion.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
     try {
       const newProResult = await PromotionService.savePromotionResult(
         promotionId,
@@ -145,6 +151,7 @@ class PromotionController {
 
   async getPromotionByCurrentDate(req, res, next) {
     var arrayResult = [];
+
     try {
       const listPromotions = await promotionService.getPromotion();
       for (const promotion of listPromotions) {

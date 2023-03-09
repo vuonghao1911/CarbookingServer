@@ -7,7 +7,13 @@ class PriceController {
     var status;
     var message = "Success";
     var Isexists;
-    const code = Price.countDocuments();
+    const codeFind = await Price.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
     try {
       if (new Date(startDate) > new Date()) {
         status = false;
