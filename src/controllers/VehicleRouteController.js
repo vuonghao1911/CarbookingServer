@@ -47,15 +47,13 @@ class VehicleRouteController {
       );
 
       console.log("Promotion", promotion);
-      console.log("id", _id);
+
       vehicleRoute.map((vehicleRoute) => {
         if (
           new Date(
-            new Date(vehicleRoute.startDate).getTime() - 7 * 3600 * 1000
+            new Date(vehicleRoute.startDate).getTime() + 7 * 3600 * 1000
           ).toLocaleDateString() ===
-          new Date(
-            new Date(req.body.startDate).getTime() - 7 * 3600 * 1000
-          ).toLocaleDateString()
+          new Date(new Date(req.body.startDate).getTime()).toLocaleDateString()
         ) {
           vehicleRouteSearch.push({
             ...vehicleRoute,
@@ -65,6 +63,7 @@ class VehicleRouteController {
           });
         }
       });
+      console.log("id", vehicleRouteSearch);
       res.json(vehicleRouteSearch);
     } catch (error) {
       next(error);
