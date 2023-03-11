@@ -167,6 +167,7 @@ const TicketService = {
           promotions: "$promotions",
         },
       },
+      { $sort: { _id: -1 } },
     ]);
 
     return ticket;

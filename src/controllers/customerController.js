@@ -90,6 +90,17 @@ class CustomerController {
       next(error);
     }
   }
+  async getCustomerByPhoneNumber(req, res, next) {
+    const { phone = "" } = req.query;
+    //console.log(number);
+    try {
+      const customer = await customerService.getCustomerByPhone(phone);
+      return res.json(customer);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
 }
 
 module.exports = new CustomerController();
