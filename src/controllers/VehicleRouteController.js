@@ -49,11 +49,14 @@ class VehicleRouteController {
       console.log("Promotion", promotion);
 
       vehicleRoute.map((vehicleRoute) => {
+        console.log(
+          "Vehicle",
+          new Date(vehicleRoute.startDate).toLocaleDateString(),
+          new Date(req.body.startDate).toLocaleDateString()
+        );
         if (
-          new Date(
-            new Date(vehicleRoute.startDate).getTime() + 7 * 3600 * 1000
-          ).toLocaleDateString() ===
-          new Date(new Date(req.body.startDate).getTime()).toLocaleDateString()
+          new Date(vehicleRoute.startDate).toLocaleDateString() ===
+          new Date(req.body.startDate).toLocaleDateString()
         ) {
           vehicleRouteSearch.push({
             ...vehicleRoute,
