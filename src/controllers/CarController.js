@@ -69,25 +69,12 @@ class CarController {
           "$unwind": "$cartype"
         },
         {
-          $lookup:
-          {
-            from: "employees",
-            localField: "employeeId",
-            foreignField: "_id",
-            as: "employee"
-          },
-        },
-        {
-          "$unwind": "$employee"
-        },
-        {
           "$project": {
             "_id": "$_id",
             "licensePlates": "$licensePlates",
             "carType": "$cartype",
-            "employeeFirstName": "$employee.firstName",
-            "employeeLastName": "$employee.lastName",
-            "chair": {"$size": "$chair"}
+            "chair": {"$size": "$chair"},
+            "status": "$status"
           },
         },
       ]);
@@ -97,15 +84,15 @@ class CarController {
     }
   }
   async addCar(req, res, next) {
-    const { idTypeCar, licensePlates, employeeId } = req.body;
+    const { idTypeCar, licensePlates } = req.body;
 
     const { chair } = await CarType.findById(idTypeCar);
     console.log(chair);
     const car = new Car({
       licensePlates: licensePlates,
       typeCarId: idTypeCar,
-      employeeId: employeeId,
       chair: chair,
+      status: true
     });
 
     try {

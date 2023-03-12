@@ -23,14 +23,7 @@ class TicketController {
       idPromotion,
     } = req.body;
     console.log(chair);
-    console.log(customer);
-    const codeFind = await Ticket.find().sort({ _id: -1 }).limit(1);
-    var code;
-    if (codeFind[0]) {
-      code = codeFind[0].code;
-    } else {
-      code = 0;
-    }
+    const code = await Ticket.countDocuments();
 
     try {
       const Arrayplace = await Promise.all(
@@ -104,111 +97,30 @@ class TicketController {
     }
   }
   async getTicket(req, res, next) {
-    let listTicket = new Array();
     try {
-      const tickets = await Ticket.aggregate([
-        {
-          $lookup: {
-            from: "customers",
-            localField: "customerId",
-            foreignField: "_id",
-            as: "customer",
-          },
-        },
-        {
-          $unwind: "$customer",
-        },
-        {
-          $lookup: {
-            from: "vehicleroutes",
-            localField: "vehicleRouteId",
-            foreignField: "_id",
-            as: "vehicleroute",
-          },
-        },
-        {
-          $unwind: "$vehicleroute",
-        },
-        {
-          $lookup: {
-            from: "places",
-            localField: "vehicleroute.departure",
-            foreignField: "_id",
-            as: "departure",
-          },
-        },
-        {
-          $unwind: "$departure",
-        },
-        {
-          $lookup: {
-            from: "places",
-            localField: "vehicleroute.destination",
-            foreignField: "_id",
-            as: "destination",
-          },
-        },
-        {
-          $unwind: "$destination",
-        },
-        {
-          $lookup: {
-            from: "cars",
-            localField: "vehicleroute.carId",
-            foreignField: "_id",
-            as: "car",
-          },
-        },
-        {
-          $unwind: "$car",
-        },
-        {
-          $lookup: {
-            from: "routes",
-            localField: "car.typeCarId",
-            foreignField: "carTypeId",
-            as: "route",
-          },
-        },
-        {
-          $unwind: "$route",
-        },
-        {
-          $lookup: {
-            from: "prices",
-            localField: "route._id",
-            foreignField: "routeId",
-            as: "price",
-          },
-        },
-        {
-          $unwind: "$price",
-        },
-        {
-          $project: {
-            _id: "$_id",
-            firstName: "$customer.firstName",
-            lastName: "$customer.lastName",
-            phoneNumber: "$customer.phoneNumber",
-            departure: "$departure.name",
-            destination: "$destination.name",
-            licensePlates: "$car.licensePlates",
-            startDate: "$vehicleroute.startDate",
-            locaDeparture: "$locationBus",
-            chair: "$chair",
-            createdAt: "$createdAt",
-            updatedAt: "$updatedAt",
-          },
-        },
-      ]);
-      tickets.map((ticket) => {
-        if (
-          new Date(ticket.startDate) > new Date(ticket.price.startDate) &&
-          new Date(ticket.startDate) < new Date(ticket.price.endDate)
-        )
-          listTicket.push(ticket);
-      });
-      res.json(listTicket);
+      const listTicket = await ticketService.getTicket();
+      var listTicketResult = [];
+      for (const ticket of listTicket) {
+        // get routeId
+        const { _id, intendTime } = await Route.findOne({
+          "departure._id": ObjectId(ticket.departure._id),
+          "destination._id": ObjectId(ticket.destination._id),
+        });
+
+        console.log("id", _id);
+        const { price } = await ticketService.checkPriceTicket(
+          ticket.startDate,
+          _id
+        );
+
+        listTicketResult.push({
+          ...ticket,
+          price: price,
+          intendTime: intendTime,
+        });
+      }
+
+      res.json(listTicketResult);
     } catch (error) {
       next(error);
     }

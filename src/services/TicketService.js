@@ -62,6 +62,110 @@ const TicketService = {
   getTicketById: async (_id) => {
     return await Ticket.findById(_id);
   },
+  getTicket: async () => {
+    const ticket = await Ticket.aggregate([
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customer",
+        },
+      },
+      {
+        $unwind: "$customer",
+      },
+      {
+        $lookup: {
+          from: "vehicleroutes",
+          localField: "vehicleRouteId",
+          foreignField: "_id",
+          as: "vehicleroute",
+        },
+      },
+      {
+        $unwind: "$vehicleroute",
+      },
+      {
+        $lookup: {
+          from: "promotionresults",
+          localField: "_id",
+          foreignField: "ticketId",
+          as: "promotionresults",
+        },
+      },
+
+      {
+        $lookup: {
+          from: "promotions",
+          localField: "promotionresults.promotionId",
+          foreignField: "_id",
+          as: "promotions",
+        },
+      },
+      {
+        $lookup: {
+          from: "places",
+          localField: "vehicleroute.departure",
+          foreignField: "_id",
+          as: "departure",
+        },
+      },
+      {
+        $unwind: "$departure",
+      },
+      {
+        $lookup: {
+          from: "places",
+          localField: "vehicleroute.destination",
+          foreignField: "_id",
+          as: "destination",
+        },
+      },
+      {
+        $unwind: "$destination",
+      },
+      {
+        $lookup: {
+          from: "cars",
+          localField: "vehicleroute.carId",
+          foreignField: "_id",
+          as: "car",
+        },
+      },
+      {
+        $unwind: "$car",
+      },
+      {
+        $project: {
+          _id: "$_id",
+          firstName: "$customer.firstName",
+          lastName: "$customer.lastName",
+          phoneNumber: "$customer.phoneNumber",
+          departure: {
+            _id: 1,
+            name: 1,
+          },
+          destination: {
+            _id: 1,
+            name: 1,
+          },
+          licensePlates: "$car.licensePlates",
+          startDate: "$vehicleroute.startDate",
+          endDate: "$vehicleroute.endDate",
+          status: "$status",
+          locaDeparture: "$locationBus",
+          chair: "$chair",
+          createdAt: "$createdAt",
+          updatedAt: "$updatedAt",
+          promotionresults: "$promotionresults",
+          promotions: "$promotions",
+        },
+      },
+    ]);
+
+    return ticket;
+  },
   getTicketByUserId: async (userId) => {
     const ticket = await Ticket.aggregate([
       {
@@ -167,7 +271,6 @@ const TicketService = {
           promotions: "$promotions",
         },
       },
-      { $sort: { _id: -1 } },
     ]);
 
     return ticket;

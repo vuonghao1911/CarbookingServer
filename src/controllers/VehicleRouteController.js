@@ -19,6 +19,7 @@ class VehicleRouteController {
         routeChoose.intendTime,
         arrayId
       );
+      console.log(route);
       return res.json(route);
     } catch (error) {
       console.log(error);
@@ -45,18 +46,14 @@ class VehicleRouteController {
         startDate,
         _id
       );
-
-      console.log("Promotion", promotion);
-
       vehicleRoute.map((vehicleRoute) => {
-        console.log(
-          "Vehicle",
-          new Date(vehicleRoute.startDate).toLocaleDateString(),
-          new Date(req.body.startDate).toLocaleDateString()
-        );
         if (
-          new Date(vehicleRoute.startDate).toLocaleDateString() ===
-          new Date(req.body.startDate).toLocaleDateString()
+          new Date(
+            new Date(vehicleRoute.startDate).getTime() - 7 * 3600 * 1000
+          ).toLocaleDateString() ===
+          new Date(
+            new Date(req.body.startDate).getTime() - 7 * 3600 * 1000
+          ).toLocaleDateString()
         ) {
           vehicleRouteSearch.push({
             ...vehicleRoute,
@@ -66,7 +63,6 @@ class VehicleRouteController {
           });
         }
       });
-      console.log("id", vehicleRouteSearch);
       res.json(vehicleRouteSearch);
     } catch (error) {
       next(error);

@@ -37,15 +37,25 @@ class PlaceController {
     const destination = await Place.findById(destinationId);
 
     try {
-      const route = new Route({
+      const route1 = new Route({
         carTypeId: carTypeId,
         intendTime: intendTime,
         departure: departure,
         destination: destination,
-        code: code,
+        code: code[0] + "-" + code[1],
+        status: true
       });
-      const saveRoute = await placeService.saveRoute(route);
-      return res.json(saveRoute);
+      const route2 = new Route({
+        carTypeId: carTypeId,
+        intendTime: intendTime,
+        departure: destination,
+        destination: departure,
+        code: code[1] + "-" + code[0],
+        status: true
+      });
+      const saveRoute1 = await placeService.saveRoute(route1);
+      const saveRoute2 = await placeService.saveRoute(route2);
+      return res.json([saveRoute1, saveRoute2]);
     } catch (error) {
       console.log(error);
       next(error);
@@ -71,9 +81,24 @@ class PlaceController {
       next(error);
     }
   }
-  async getRoute(req, res, next) {
+  async updateRoute(req, res, next) {
     try {
-      const route = await Route.aggregate([
+      const route = await Route.findByIdAndUpdate(
+        req.body.routeId,
+        {
+          intendTime: req.body.timeBusLineUpdate,
+          carTypeId: req.body.typeBusUpdate,
+          status: req.body.statusBusLineUpdate
+        });
+      res.json(route);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getRoute(req, res, next) {
+    let routesList = new Array();
+    try {
+      const routes = await Route.aggregate([
         {
           $lookup: {
             from: "cartypes",
@@ -84,6 +109,14 @@ class PlaceController {
         },
         { $unwind: "$cartype" },
         {
+          $lookup: {
+            from: "prices",
+            localField: "_id",
+            foreignField: "routeId",
+            as: "price",
+          },
+        },
+        {
           $project: {
             _id: "$_id",
             carType: "$cartype.type",
@@ -93,10 +126,19 @@ class PlaceController {
             destination: "$destination",
             status: "$status",
             code: "$code",
+            price: "$price"
           },
         },
       ]);
-      res.json(route);
+      routes.map(route => {
+        if(route.price.length != 0){
+            route.price = route.price.filter(price => (new Date(price.startDate).getTime() <= new Date().getTime() && new Date(price.endDate).getTime() >= new Date().getTime()));
+            routesList.push(route);
+        }
+        else
+          routesList.push(route);
+      })
+      res.json(routesList);
     } catch (error) {
       next(error);
     }

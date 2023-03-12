@@ -13,18 +13,12 @@ const VehicleRouteService = {
     intendTime,
     arrayId
   ) => {
-    const codeFind = await VehicleRoute.find().sort({ _id: -1 }).limit(1);
-    var code;
-    if (codeFind[0]) {
-      code = codeFind[0].code;
-    } else {
-      code = 0;
-    }
+    const code = await VehicleRoute.countDocuments();
     let startDateNew = new Date(
       new Date(startDate).getTime() + 7 * 3600 * 1000
     );
     for (let i = 0; i < arrayId.length; i++) {
-      const { chair } = await Car.findById(arrayId[i].id);
+      const { chair } = await Car.findById(arrayId[i]);
       let check = 1;
       while (startDateNew.getTime() <= new Date(endDate).getTime()) {
         if (check % 2 != 0) {
@@ -35,7 +29,7 @@ const VehicleRouteService = {
             ),
             departure: departure,
             destination: destination,
-            carId: arrayId[i].id,
+            carId: arrayId[i],
             chair: chair,
             code: code + 1,
           });
@@ -52,7 +46,7 @@ const VehicleRouteService = {
             ),
             departure: destination,
             destination: departure,
-            carId: arrayId[i].id,
+            carId: arrayId[i],
             chair: chair,
             code: code + 1,
           });

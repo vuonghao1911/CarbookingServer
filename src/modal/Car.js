@@ -14,6 +14,9 @@ const carSchema = new Schema({
     type: ObjectId,
   },
   chair: [],
+  statua: {
+    type: Boolean
+  }
 });
 
 const Car = mongoose.model("Car", carSchema);

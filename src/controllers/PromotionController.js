@@ -18,24 +18,15 @@ class PromotionController {
       budget,
       promotionType,
     } = req.body;
-
-    var status;
-    var message = "Success";
-    var Isexists;
     const code = await Promotion.countDocuments();
     try {
-      if (new Date(startDate) > new Date()) {
-        status = false;
-      } else {
-        status = true;
-      }
       const promotion = new Promotion({
         startDate: startDate,
         endDate: endDate,
         percentDiscount: percentDiscount,
         routeId: routeId,
         quantityTicket: quantityTicket,
-        status: status,
+        status: true,
         title: title,
         purchaseAmount: purchaseAmount,
         moneyReduced: moneyReduced,
@@ -44,30 +35,8 @@ class PromotionController {
         promotionType: promotionType,
         code: code + 1,
       });
-
-      const promotionsFind = await Promotion.find({ routeId: routeId });
-      console.log(promotionsFind);
-      if (promotionsFind.length > 0) {
-        for (const promotion of promotionsFind) {
-          if (
-            new Date(startDate) >= new Date(promotion.startDate) &&
-            new Date(promotion.endDate) >= new Date(startDate) &&
-            promotion.status == true
-          ) {
-            message = "Promotion Is exists";
-            Isexists = true;
-          }
-        }
-        if (Isexists) {
-          res.json({ newPromotion: null, message });
-        } else {
-          const newPromotion = await promotion.save();
-          res.json({ newPromotion, message });
-        }
-      } else {
-        const newPromotion = await promotion.save();
-        res.json({ newPromotion, message });
-      }
+      const newPromotion = await promotion.save();
+      res.json({ newPromotion, message });
     } catch (error) {
       next(error);
     }
@@ -130,13 +99,7 @@ class PromotionController {
   }
   async addPromotionResult(req, res, next) {
     const { promotionId, ticketId, discountAmount } = req.body;
-    const codeFind = await Promotion.find().sort({ _id: -1 }).limit(1);
-    var code;
-    if (codeFind[0]) {
-      code = codeFind[0].code;
-    } else {
-      code = 0;
-    }
+
     try {
       const newProResult = await PromotionService.savePromotionResult(
         promotionId,
@@ -151,7 +114,6 @@ class PromotionController {
 
   async getPromotionByCurrentDate(req, res, next) {
     var arrayResult = [];
-
     try {
       const listPromotions = await promotionService.getPromotion();
       for (const promotion of listPromotions) {
