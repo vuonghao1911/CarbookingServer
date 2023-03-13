@@ -1,13 +1,14 @@
 const priceService = require("../services/PriceService");
 const Price = require("../modal/Price");
+const PriceHeader = require("../modal/PriceHeader");
+const ObjectId = require("mongoose").Types.ObjectId;
 
 class PriceController {
-  async addPrice(req, res, next) {
-    var { startDate, endDate, priceTicket, routeId, title } = req.body;
+  async addPriceHeader(req, res, next) {
+    var { startDate, endDate, title } = req.body;
     var status;
-    var message = "Success";
-    var Isexists;
-    const codeFind = await Price.find().sort({ _id: -1 }).limit(1);
+
+    const codeFind = await PriceHeader.find().sort({ _id: -1 }).limit(1);
     var code;
     if (codeFind[0]) {
       code = codeFind[0].code;
@@ -21,46 +22,68 @@ class PriceController {
         status = true;
       }
       let data = {
-        price: priceTicket,
         startDate: startDate,
         endDate: endDate,
-        routeId: routeId,
         title: title,
         status: status,
         code: code + 1,
       };
-      const priceFind = await Price.find({ routeId: routeId });
-      console.log(priceFind);
-      if (priceFind.length > 0) {
-        for (const price of priceFind) {
-          if (
-            new Date(startDate) >= new Date(price.startDate) &&
-            new Date(price.endDate) >= new Date(startDate)
-          ) {
-            data = null;
-            message = "Price Isexists";
-            Isexists = true;
-          }
-        }
-        if (Isexists) {
-          res.json({ newPrice: null, message });
-        } else {
-          const newPrice = new Price(data);
-          await newPrice.save();
-          res.json({ newPrice, message });
-        }
+      const priceCheck = await priceService.checDatePrice(startDate);
+      console.log(priceCheck);
+      if (priceCheck) {
+        res.json({ priceHeader: null, message: "priceHeader Is exists" });
       } else {
-        const newPrice = new Price(data);
-        await newPrice.save();
-        res.json({ newPrice, message });
+        const priceHeader = new PriceHeader(data);
+        await priceHeader.save();
+        res.json({ priceHeader, message: "Success" });
       }
     } catch (error) {
       next(error);
     }
   }
-  async getPrice(req, res, next) {
+  async addPrice(req, res, next) {
+    var { routeId, price, priceHeaderId, carTypeId } = req.body;
+
+    const codeFind = await Price.find().sort({ _id: -1 }).limit(1);
+    var code;
+    if (codeFind[0]) {
+      code = codeFind[0].code;
+    } else {
+      code = 0;
+    }
+    let data = {
+      routeId: routeId,
+      price: price,
+      priceHeaderId: priceHeaderId,
+      carTypeId: carTypeId,
+      code: code + 1,
+    };
+    try {
+      const priceRoute = await priceService.checkPriceRoute(
+        routeId,
+        priceHeaderId,
+        carTypeId
+      );
+      if (priceRoute) {
+        res.json({ price: null, message: "price Is exists" });
+      } else {
+        const price = new Price(data);
+        await price.save();
+        res.json({ price, message: "Success" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getPriceByIdHeader(req, res, next) {
+    const { priceHeaderId } = req.params;
     try {
       const price = await Price.aggregate([
+        {
+          $match: {
+            priceHeaderId: ObjectId(priceHeaderId),
+          },
+        },
         {
           $lookup: {
             from: "routes",
@@ -73,19 +96,48 @@ class PriceController {
           $unwind: "$route",
         },
         {
+          $lookup: {
+            from: "cartypes",
+            localField: "carTypeId",
+            foreignField: "_id",
+            as: "cartype",
+          },
+        },
+        {
+          $unwind: "$cartype",
+        },
+        {
           $project: {
             _id: "$_id",
-            startDate: "$startDate",
-            endDate: "$endDate",
+
             price: "$price",
-            status: "$status",
+
             route: "$route",
-            title: "$title",
-            status: "$status",
+            cartype: {
+              _id: 1,
+              type: 1,
+            },
+            priceHeaderId: "$priceHeaderId",
           },
         },
       ]);
       res.json(price);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getPriceHeader(req, res, next) {
+    try {
+      const priceHeader = await PriceHeader.find();
+      for (const priceHd of priceHeader) {
+        if (new Date(priceHd.startDate) > new Date()) {
+          await PriceHeader.updateOne(
+            { _id: priceHd._id },
+            { $set: { status: false } }
+          );
+        }
+      }
+      res.json(priceHeader);
     } catch (error) {
       next(error);
     }

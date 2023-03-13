@@ -9,6 +9,7 @@ const moment = require("moment");
 
 const Route = require("../modal/Route");
 const PromotionResults = require("../modal/PromotionResult");
+const PromotionLine = require("../modal/PromotionLine");
 
 class TicketController {
   async bookingTicket(req, res, next) {
@@ -21,6 +22,7 @@ class TicketController {
       phoneNumber,
       discountAmount,
       idPromotion,
+      priceId,
     } = req.body;
     console.log(chair);
     console.log(customer);
@@ -64,7 +66,8 @@ class TicketController {
           locationBus,
           phoneNumber,
           discountAmount,
-          code
+          code,
+          priceId
         );
         return res.json(saveticket);
       } else {
@@ -81,7 +84,8 @@ class TicketController {
           locationBus,
           phoneNumber,
           discountAmount,
-          code
+          code,
+          priceId
         );
 
         return res.json(saveticket);
@@ -104,7 +108,6 @@ class TicketController {
     }
   }
   async getTicket(req, res, next) {
-    let listTicket = new Array();
     try {
       const tickets = await Ticket.aggregate([
         {
@@ -128,6 +131,23 @@ class TicketController {
         },
         {
           $unwind: "$vehicleroute",
+        },
+        {
+          $lookup: {
+            from: "promotionresults",
+            localField: "_id",
+            foreignField: "ticketId",
+            as: "promotionresults",
+          },
+        },
+
+        {
+          $lookup: {
+            from: "promotions",
+            localField: "promotionresults.promotionId",
+            foreignField: "_id",
+            as: "promotions",
+          },
         },
         {
           $lookup: {
@@ -164,25 +184,14 @@ class TicketController {
         },
         {
           $lookup: {
-            from: "routes",
-            localField: "car.typeCarId",
-            foreignField: "carTypeId",
-            as: "route",
-          },
-        },
-        {
-          $unwind: "$route",
-        },
-        {
-          $lookup: {
             from: "prices",
-            localField: "route._id",
-            foreignField: "routeId",
-            as: "price",
+            localField: "priceId",
+            foreignField: "_id",
+            as: "prices",
           },
         },
         {
-          $unwind: "$price",
+          $unwind: "$prices",
         },
         {
           $project: {
@@ -190,25 +199,48 @@ class TicketController {
             firstName: "$customer.firstName",
             lastName: "$customer.lastName",
             phoneNumber: "$customer.phoneNumber",
-            departure: "$departure.name",
-            destination: "$destination.name",
+            departure: {
+              _id: 1,
+              name: 1,
+            },
+            destination: {
+              _id: 1,
+              name: 1,
+            },
             licensePlates: "$car.licensePlates",
             startDate: "$vehicleroute.startDate",
+            endDate: "$vehicleroute.endDate",
+            status: "$status",
             locaDeparture: "$locationBus",
             chair: "$chair",
             createdAt: "$createdAt",
             updatedAt: "$updatedAt",
+            promotionresults: "$promotionresults",
+            promotions: "$promotions",
+            price: "$prices.price",
           },
         },
       ]);
-      tickets.map((ticket) => {
-        if (
-          new Date(ticket.startDate) > new Date(ticket.price.startDate) &&
-          new Date(ticket.startDate) < new Date(ticket.price.endDate)
-        )
-          listTicket.push(ticket);
-      });
-      res.json(listTicket);
+      var listTicketResult = [];
+      for (const ticket of tickets) {
+        // get routeId
+        const { _id, intendTime } = await Route.findOne({
+          "departure._id": ObjectId(ticket.departure._id),
+          "destination._id": ObjectId(ticket.destination._id),
+        });
+        var pomrotionLine;
+        if (ticket.promotions[0]) {
+          pomrotionLine = await PromotionLine.findById(
+            ticket.promotions[0].promotionLineId
+          );
+        }
+        listTicketResult.push({
+          ...ticket,
+          pomrotionLine,
+          intendTime: intendTime,
+        });
+      }
+      res.json(listTicketResult);
     } catch (error) {
       next(error);
     }
@@ -227,20 +259,18 @@ class TicketController {
           "departure._id": ObjectId(ticket.departure._id),
           "destination._id": ObjectId(ticket.destination._id),
         });
-
-        console.log("id", _id);
-        const { price } = await ticketService.checkPriceTicket(
-          ticket.startDate,
-          _id
-        );
-
+        var pomrotionLine;
+        if (ticket.promotions[0]) {
+          pomrotionLine = await PromotionLine.findById(
+            ticket.promotions[0].promotionLineId
+          );
+        }
         listTicketResult.push({
           ...ticket,
-          price: price,
+          pomrotionLine,
           intendTime: intendTime,
         });
       }
-
       res.json(listTicketResult);
     } catch (error) {
       next(error);

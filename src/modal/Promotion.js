@@ -2,54 +2,40 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const ObjectId = mongoose.Types.ObjectId;
 
-const promotionSchema = new Schema({
-  startDate: {
-    type: Date,
-    required: true,
-    default: new Date(),
-  },
-  endDate: {
-    type: Date,
-    required: true,
-    default: new Date(),
-  },
-  percentDiscount: {
-    type: Number,
-  },
-  routeId: {
-    type: ObjectId,
-    required: true,
-  },
-  quantityTicket: {
-    type: Number,
-  },
-  status: {
-    type: Boolean,
-    default: false,
-  },
-  title: {
-    type: String,
-  },
+const promotionSchema = new Schema(
+  {
+    percentDiscount: {
+      type: Number,
+    },
+    quantityTicket: {
+      type: Number,
+    },
 
-  purchaseAmount: {
-    type: Number,
+    purchaseAmount: {
+      type: Number,
+    },
+    moneyReduced: {
+      type: Number,
+    },
+    maximumDiscount: {
+      type: Number,
+    },
+    budget: {
+      type: Number,
+    },
+
+    code: {
+      type: Number,
+    },
+    promotionHeaderId: {
+      type: ObjectId,
+    },
+    promotionLineId: {
+      type: ObjectId,
+    },
   },
-  moneyReduced: {
-    type: Number,
-  },
-  maximumDiscount: {
-    type: Number,
-  },
-  budget: {
-    type: Number,
-  },
-  promotionType: {
-    type: ObjectId,
-  },
-  code: {
-    type: Number,
-  },
-});
+  { timestamps: true }
+);
 
 const Promotion = mongoose.model("Promotion", promotionSchema);
 

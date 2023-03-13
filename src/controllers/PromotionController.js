@@ -1,15 +1,18 @@
 const promotionService = require("../services/PromotionService");
 const Promotion = require("../modal/Promotion");
+const PromotionHeader = require("../modal/PromotionHeader");
 const PromotionService = require("../services/PromotionService");
 const PromotionType = require("../modal/PromotionType");
+const RouteType = require("../modal/RouteType");
+const PromotionLine = require("../modal/PromotionLine");
 
 class PromotionController {
-  async addPromotion(req, res, next) {
+  // add promotion details and promotion line
+  async addPromotions(req, res, next) {
     const {
       startDate,
       endDate,
       percentDiscount,
-      routeId,
       quantityTicket,
       title,
       purchaseAmount,
@@ -17,95 +20,149 @@ class PromotionController {
       maximumDiscount,
       budget,
       promotionType,
+      description,
+      promotionHeaderId,
+      codeLine,
+      routeTypeId,
     } = req.body;
 
     var status;
     var message = "Success";
-    var Isexists;
-    const code = await Promotion.countDocuments();
+
+    const codeFindDetails = await PromotionLine.find()
+      .sort({ _id: -1 })
+      .limit(1);
+    var codeDetails;
+    if (codeFindDetails[0]) {
+      codeDetails = codeFindDetails[0].code;
+    } else {
+      codeDetails = 0;
+    }
+    if (new Date(startDate) > new Date()) {
+      status = false;
+    } else {
+      status = true;
+    }
+
+    const checkDate = await promotionService.checDatePromotionsDetails(
+      startDate,
+      endDate
+    );
+    const checkDateLine = await promotionService.checDatePromotionsLine(
+      startDate
+    );
+    if (checkDate && checkDateLine == null) {
+      const promotionLine = new PromotionLine({
+        startDate: startDate,
+        endDate: endDate,
+        status: status,
+        title: title,
+        code: codeLine,
+        title: title,
+        promotionTypeId: promotionType,
+        promotionHeaderId: promotionHeaderId,
+        description: description,
+        routeTypeId: routeTypeId,
+      });
+
+      const newPromotionLine = await promotionLine.save();
+      const promotion = new Promotion({
+        percentDiscount: percentDiscount,
+        quantityTicket: quantityTicket,
+        purchaseAmount: purchaseAmount,
+        moneyReduced: moneyReduced,
+        maximumDiscount: maximumDiscount,
+        budget: budget,
+        promotionType: promotionType,
+        promotionHeaderId: promotionHeaderId,
+        promotionLineId: newPromotionLine._id,
+      });
+
+      const newPromotion = await promotion.save();
+
+      res.json({ newPromotionLine, newPromotion, message });
+    } else {
+      message =
+        "startDate and EndDate promotionLine or PromotionDetails invalid ";
+      res.json({ newPromotionLine: null, newPromotion: null, message });
+    }
+  }
+  catch(error) {
+    next(error);
+  }
+  // add promotion header
+  async addPromotionHeader(req, res, next) {
+    const { startDate, endDate, title, description, code } = req.body;
+
+    var status;
+
     try {
       if (new Date(startDate) > new Date()) {
         status = false;
       } else {
         status = true;
       }
-      const promotion = new Promotion({
+      let data = {
         startDate: startDate,
         endDate: endDate,
-        percentDiscount: percentDiscount,
-        routeId: routeId,
-        quantityTicket: quantityTicket,
-        status: status,
         title: title,
-        purchaseAmount: purchaseAmount,
-        moneyReduced: moneyReduced,
-        maximumDiscount: maximumDiscount,
-        budget: budget,
-        promotionType: promotionType,
-        code: code + 1,
-      });
-
-      const promotionsFind = await Promotion.find({ routeId: routeId });
-      console.log(promotionsFind);
-      if (promotionsFind.length > 0) {
-        for (const promotion of promotionsFind) {
-          if (
-            new Date(startDate) >= new Date(promotion.startDate) &&
-            new Date(promotion.endDate) >= new Date(startDate) &&
-            promotion.status == true
-          ) {
-            message = "Promotion Is exists";
-            Isexists = true;
-          }
-        }
-        if (Isexists) {
-          res.json({ newPromotion: null, message });
-        } else {
-          const newPromotion = await promotion.save();
-          res.json({ newPromotion, message });
-        }
+        status: status,
+        code: code,
+        description: description,
+      };
+      const promotionCheck = await promotionService.checDatePromotionsHeader(
+        startDate
+      );
+      console.log(promotionCheck);
+      if (promotionCheck) {
+        res.json({
+          promotionsHeader: null,
+          message: "promotionHeader Is exists",
+        });
       } else {
-        const newPromotion = await promotion.save();
-        res.json({ newPromotion, message });
+        const promotionsHeader = new PromotionHeader(data);
+        await promotionsHeader.save();
+        res.json({ promotionsHeader, message: "Success" });
       }
     } catch (error) {
       next(error);
     }
   }
+
   async getPromotion(req, res, next) {
+    const { idProHeader } = req.params;
+    const result = [];
     try {
-      const promotion = await Promotion.aggregate([
-        {
-          $lookup: {
-            from: "routes",
-            localField: "routeId",
-            foreignField: "_id",
-            as: "route",
-          },
-        },
-        {
-          $unwind: "$route",
-        },
-        {
-          $project: {
-            _id: "$_id",
-            startDate: "$startDate",
-            endDate: "$endDate",
-            percentDiscount: "$percentDiscount",
-            routeId: "$routeId",
-            quantityTicket: "$quantityTicket",
-            status: "$status",
-            title: "$title",
-            purchaseAmount: "$purchaseAmount",
-            moneyReduced: "$moneyReduced",
-            maximumDiscount: "$maximumDiscount",
-            budget: "$budget",
-            departure: "$route.departure.name",
-            destination: "$route.destination.name",
-          },
-        },
-      ]);
-      res.json(promotion);
+      const promotion =
+        await PromotionService.getPromotionDetailsByPromotionHeaderId(
+          idProHeader
+        );
+      // console.log(promotion[1].promotionLine.startDate);
+
+      for (const promo of promotion) {
+        console.log(promo?.promotionLine?.startDate);
+        if (new Date(promo?.promotionLine?.startDate) > new Date()) {
+          await PromotionLine.updateOne(
+            { _id: promo?.promotionLine?._id },
+            { $set: { status: false } }
+          );
+        }
+      }
+      const promotionResult =
+        await PromotionService.getPromotionDetailsByPromotionHeaderId(
+          idProHeader
+        );
+      for (const elem of promotionResult) {
+        var routeType = null;
+        if (elem?.promotionLine?.routeTypeId) {
+          routeType = await RouteType.findById(
+            elem?.promotionLine?.routeTypeId
+          );
+        }
+        result.push({ ...elem, routeType: routeType });
+      }
+
+      res.json(result);
     } catch (error) {
       next(error);
     }
@@ -167,6 +224,25 @@ class PromotionController {
         }
       }
       res.json(arrayResult);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getPromotionHeader(req, res, next) {
+    try {
+      const promotionHeader = await PromotionHeader.find();
+      //check date > current date update status
+      for (const promotionHe of promotionHeader) {
+        if (new Date(promotionHe.startDate) > new Date()) {
+          await PromotionHeader.updateOne(
+            { _id: promotionHe._id },
+            { $set: { status: false } }
+          );
+        }
+      }
+
+      const promotionResult = await PromotionHeader.find();
+      res.json(promotionResult);
     } catch (error) {
       next(error);
     }

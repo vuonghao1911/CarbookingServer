@@ -26,6 +26,9 @@ const ticketSchema = new Schema(
     code: {
       type: Number,
     },
+    priceId: {
+      type: ObjectId,
+    },
   },
   { timestamps: true }
 );

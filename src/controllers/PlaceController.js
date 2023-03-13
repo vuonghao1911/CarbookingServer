@@ -23,8 +23,14 @@ class PlaceController {
   }
 
   async addRoute(req, res, next) {
-    const { carTypeId, intendTime, departureId, destinationId, code } =
-      req.body;
+    const {
+      carTypeId,
+      intendTime,
+      departureId,
+      destinationId,
+      code,
+      routeTypeId,
+    } = req.body;
     //console.log(number);
 
     // const Arrayplace = await Promise.all(
@@ -43,6 +49,7 @@ class PlaceController {
         departure: departure,
         destination: destination,
         code: code,
+        routeType: routeTypeId,
       });
       const saveRoute = await placeService.saveRoute(route);
       return res.json(saveRoute);

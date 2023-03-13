@@ -3,9 +3,6 @@ const Schema = mongoose.Schema;
 const ObjectId = mongoose.Types.ObjectId;
 
 const routeSchema = new Schema({
-  carTypeId: {
-    type: ObjectId,
-  },
   intendTime: {
     type: Number,
   },
@@ -17,6 +14,9 @@ const routeSchema = new Schema({
   },
   code: {
     type: String,
+  },
+  routeType: {
+    type: ObjectId,
   },
 });
 

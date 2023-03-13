@@ -2,10 +2,12 @@ const vehicleRouteService = require("../services/VehicleRouteService");
 const Customer = require("../modal/Customer");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Route = require("../modal/Route");
+const RouteType = require("../modal/RouteType");
 const VehicleRoute = require("../modal/VehicleRoute");
+const DepartureTime = require("../modal/DepartureTime");
 class VehicleRouteController {
   async addVehicleRoute(req, res, next) {
-    const { startDate, endDate, routeId, arrayId } = req.body;
+    const { startDate, startTimeId, routeId, carId, endDate } = req.body;
     console.log(routeId);
     try {
       const routeChoose = await Route.findById(routeId);
@@ -13,11 +15,12 @@ class VehicleRouteController {
       const destination = routeChoose.destination._id;
       const route = await vehicleRouteService.addRoutes(
         startDate,
-        endDate,
+        startTimeId,
         departure,
         destination,
         routeChoose.intendTime,
-        arrayId
+        carId,
+        endDate
       );
       return res.json(route);
     } catch (error) {
@@ -33,141 +36,161 @@ class VehicleRouteController {
         departure,
         destination
       );
-      const { _id, intendTime } = await Route.findOne({
+      const { _id, intendTime, routeType } = await Route.findOne({
         "departure._id": ObjectId(departure),
         "destination._id": ObjectId(destination),
       });
-      const { price } = await vehicleRouteService.checkPriceRoute(
-        startDate,
-        _id
-      );
-      const promotion = await vehicleRouteService.checkPromotionsRoute(
-        startDate,
-        _id
-      );
 
-      console.log("Promotion", promotion);
-
-      vehicleRoute.map((vehicleRoute) => {
+      for (const route of vehicleRoute) {
         console.log(
           "Vehicle",
-          new Date(vehicleRoute.startDate).toLocaleDateString(),
+          new Date(route.startDate).toLocaleDateString(),
           new Date(req.body.startDate).toLocaleDateString()
         );
         if (
-          new Date(vehicleRoute.startDate).toLocaleDateString() ===
+          new Date(route.startDate).toLocaleDateString() ===
           new Date(req.body.startDate).toLocaleDateString()
         ) {
-          vehicleRouteSearch.push({
-            ...vehicleRoute,
-            intendTime,
-            price,
-            promotion,
-          });
+          const price = await vehicleRouteService.checkPriceRoute(
+            startDate,
+            _id,
+            route.carTypeId
+          );
+          const promotion = await vehicleRouteService.checkPromotionsRoute(
+            startDate
+          );
+          if (promotion?.promotionLine.routeTypeId) {
+            if (promotion.promotionLine.routeTypeId === routeType) {
+              vehicleRouteSearch.push({
+                ...route,
+                intendTime,
+                priceId: price._id,
+                price: price.price,
+                promotion,
+              });
+            } else {
+              vehicleRouteSearch.push({
+                ...route,
+                intendTime,
+                priceId: price._id,
+                price: price.price,
+                promotion: null,
+              });
+            }
+          } else {
+            vehicleRouteSearch.push({
+              ...route,
+              intendTime,
+              priceId: price._id,
+              price: price.price,
+              promotion,
+            });
+          }
         }
-      });
-      console.log("id", vehicleRouteSearch);
+      }
+
       res.json(vehicleRouteSearch);
     } catch (error) {
       next(error);
     }
   }
-  async getCustomerById(req, res, next) {
-    const { userId } = req.params;
-    console.log(userId);
+  async addDepartureTime(req, res, next) {
+    const { code, time } = req.body;
 
     try {
-      const customer = await Customer.findById(userId);
+      const departureTime = new DepartureTime({
+        code: code,
+        time: time,
+      });
+      const newDepartureTime = await departureTime.save();
 
-      res.json(customer);
+      res.json(newDepartureTime);
     } catch (error) {
       next(error);
     }
   }
-  async getVehicleRoute(req, res, next) {
+  async addRouteType(req, res, next) {
+    const { code, type, description } = req.body;
+
     try {
-      const vehicleRoute = await VehicleRoute.aggregate([
-        {
-          $lookup: {
-            from: "cars",
-            localField: "carId",
-            foreignField: "_id",
-            as: "car",
-          },
-        },
-        {
-          $unwind: "$car",
-        },
-        {
-          $lookup: {
-            from: "places",
-            localField: "departure",
-            foreignField: "_id",
-            as: "departure",
-          },
-        },
-        {
-          $unwind: "$departure",
-        },
-        {
-          $lookup: {
-            from: "places",
-            localField: "destination",
-            foreignField: "_id",
-            as: "destination",
-          },
-        },
-        {
-          $unwind: "$destination",
-        },
-        {
-          $lookup: {
-            from: "cartypes",
-            localField: "car.typeCarId",
-            foreignField: "_id",
-            as: "cartype",
-          },
-        },
-        {
-          $unwind: "$cartype",
-        },
-        {
-          $lookup: {
-            from: "routes",
-            localField: "car.typeCarId",
-            foreignField: "carTypeId",
-            as: "route",
-          },
-        },
-        {
-          $unwind: "$route",
-        },
-        {
-          $lookup: {
-            from: "prices",
-            localField: "route._id",
-            foreignField: "routeId",
-            as: "price",
-          },
-        },
-        {
-          $unwind: "$price",
-        },
-        {
-          $project: {
-            _id: "$_id",
-            startDate: "$startDate",
-            endDate: "$endDate",
-            departure: "$departure",
-            destination: "$destination",
-            licensePlates: "$car.licensePlates",
-            carType: "$cartype.type",
-            price: "$price",
-            chair: "$chair",
-          },
-        },
-      ]);
-      res.json(vehicleRoute);
+      const departureTime = new RouteType({
+        code: code,
+        type: type,
+        description: description,
+      });
+      const newDepartureTime = await departureTime.save();
+
+      res.json(newDepartureTime);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getCarRoute(req, res, next) {
+    const { startDate, startTimeId, routeId } = req.body;
+
+    try {
+      const result = await vehicleRouteService.getListCarbyStartTime(
+        startDate,
+        startTimeId,
+        routeId
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+  //get all Vehicle routes by idRoute
+  async getVehicleRoute(req, res, next) {
+    const { routeId } = req.params;
+    let vehicleRouteSearch = [];
+    const { departure, destination, intendTime, routeType } =
+      await Route.findById(routeId);
+    try {
+      const vehicleRoute = await vehicleRouteService.findVehicleRoute(
+        departure._id,
+        destination._id
+      );
+
+      for (const route of vehicleRoute) {
+        const price = await vehicleRouteService.checkPriceRoute(
+          route.startDate,
+          routeId,
+          route.carTypeId
+        );
+        const promotion = await vehicleRouteService.checkPromotionsRoute(
+          route.startDate
+        );
+        if (promotion?.promotionLine.routeTypeId) {
+          if (promotion.promotionLine.routeTypeId === routeType) {
+            vehicleRouteSearch.push({
+              ...route,
+              intendTime,
+              priceId: price._id,
+              price: price.price,
+              promotion,
+            });
+          } else {
+            vehicleRouteSearch.push({
+              ...route,
+              intendTime,
+              priceId: price._id,
+              price: price.price,
+              promotion: null,
+            });
+          }
+        } else {
+          vehicleRouteSearch.push({
+            ...route,
+            intendTime,
+            priceId: price._id,
+            price: price.price,
+            promotion,
+          });
+        }
+      }
+
+      res.json(vehicleRouteSearch);
     } catch (error) {
       next(error);
     }

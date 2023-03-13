@@ -1,6 +1,7 @@
 const Ticket = require("../modal/Ticket");
 const PromotionService = require("../services/PromotionService");
 const Promotion = require("../modal/Promotion");
+const Customer = require("../modal/Customer");
 const Price = require("../modal/Price");
 const VehicleRoute = require("../modal/VehicleRoute");
 const ObjectId = require("mongoose").Types.ObjectId;
@@ -14,9 +15,19 @@ const TicketService = {
     locationBus,
     phoneNumber,
     discountAmount,
-    code
+    code,
+    priceId
   ) => {
     var ticketSave;
+
+    await Customer.updateOne(
+      { _id: customerId },
+      {
+        $set: {
+          customerTypeId: "640e987e186ba7d1aee14309",
+        },
+      }
+    );
     if (idPromotion) {
       const ticket = new Ticket({
         vehicleRouteId: vehicleRouteId,
@@ -26,6 +37,7 @@ const TicketService = {
         locationBus: locationBus,
         phoneNumber: phoneNumber,
         code: code + 1,
+        priceId: priceId,
       });
 
       ticketSave = await ticket.save();
@@ -53,6 +65,7 @@ const TicketService = {
         locationBus: locationBus,
         phoneNumber: phoneNumber,
         code: code + 1,
+        priceId: priceId,
       });
       ticketSave = await ticket.save();
     }
@@ -142,6 +155,17 @@ const TicketService = {
         $unwind: "$car",
       },
       {
+        $lookup: {
+          from: "prices",
+          localField: "priceId",
+          foreignField: "_id",
+          as: "prices",
+        },
+      },
+      {
+        $unwind: "$prices",
+      },
+      {
         $project: {
           _id: "$_id",
           firstName: "$customer.firstName",
@@ -165,6 +189,7 @@ const TicketService = {
           updatedAt: "$updatedAt",
           promotionresults: "$promotionresults",
           promotions: "$promotions",
+          price: "$prices.price",
         },
       },
       { $sort: { _id: -1 } },

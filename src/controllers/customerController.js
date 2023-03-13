@@ -1,5 +1,6 @@
 const customerService = require("../services/customerService");
 const Customer = require("../modal/Customer");
+const CustomerType = require("../modal/CustomerType");
 class CustomerController {
   async addCustomer(req, res, next) {
     const { firstName, lastName, phoneNumber, address } = req.body;
@@ -37,6 +38,22 @@ class CustomerController {
       const customer = await Customer.findById(userId);
 
       res.json(customer);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async addCustomerType(req, res, next) {
+    const { code, type, description } = req.body;
+
+    try {
+      const departureTime = new CustomerType({
+        code: code,
+        type: type,
+        description: description,
+      });
+      const newDepartureTime = await departureTime.save();
+
+      res.json(newDepartureTime);
     } catch (error) {
       next(error);
     }

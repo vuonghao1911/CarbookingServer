@@ -31,6 +31,9 @@ const customerSchema = new Schema({
   code: {
     type: Number,
   },
+  customerTypeId: {
+    type: ObjectId,
+  },
 });
 
 //check userId

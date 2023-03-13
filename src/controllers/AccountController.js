@@ -68,6 +68,7 @@ class AccountController {
             passWord: passHash,
             role: role,
             idUser: user._id,
+            customerTypeId: "640e9859186ba7d1aee14307",
           });
           const saveAccount = await AccountService.saveAccount(account);
           newAccount = { user: user, checkRegister: true };

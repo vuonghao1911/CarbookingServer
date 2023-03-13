@@ -6,8 +6,11 @@ const vehicleRouteSchema = new Schema({
   startDate: {
     type: Date,
   },
-  endDate: {
-    type: Date,
+  startTime: {
+    type: ObjectId,
+  },
+  endTime: {
+    type: String,
   },
   departure: {
     type: ObjectId,
