@@ -125,6 +125,7 @@ class VehicleRouteController {
       next(error);
     }
   }
+  // get ds car khong trung voi tuyen, ngay bat dau, va gio xuat ben
   async getCarRoute(req, res, next) {
     const { startDate, startTimeId, routeId } = req.body;
 

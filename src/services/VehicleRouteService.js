@@ -73,8 +73,7 @@ const VehicleRouteService = {
     const { departure, destination, intendTime } = await Route.findById(
       routeId
     );
-    let startDateNew = new Date(startDate);
-    console.log("fsf", startDateNew);
+
     var arrayFinal = [];
     const list = await VehicleRoute.find();
 
