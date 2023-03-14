@@ -10,5 +10,10 @@ router.post("/searchRoute", vehicleRouteController.searchVehicleRoute);
 router.get("/all/:routeId", vehicleRouteController.getVehicleRoute);
 // get list Car Unique with Route, StartDate, TimeDeparture
 router.post("/getCarRoute", vehicleRouteController.getCarRoute);
+// get list ticket and list chair vehicle by id vehicle
+router.get(
+  "/getTicketVehice/:vehicleId",
+  vehicleRouteController.getListTicketByIdVehicleRoute
+);
 
 module.exports = router;

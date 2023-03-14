@@ -27,120 +27,120 @@
 //           },
 //         }
 //       );
-db.tickets.aggregate([
+// db.tickets.aggregate([
 
-   {
-          $match: {
-            customerId: ObjectId("63f5b52a0437997420cf95df"),
+//    {
+//           $match: {
+//             customerId: ObjectId("63f5b52a0437997420cf95df"),
             
-          },
-        },
-        {
-          $lookup: {
-            from: "customers",
-            localField: "customerId",
-            foreignField: "_id",
-            as: "customer",
-          },
-        },
-        {
-          $unwind: "$customer",
-        },
-        {
-          $lookup: {
-            from: "vehicleroutes",
-            localField: "vehicleRouteId",
-            foreignField: "_id",
-            as: "vehicleroute",
-          },
-        },
-         {
-          $unwind: "$vehicleroute",
-        },
-         {
-          $lookup: {
-            from: "promotionresults",
-            localField: "_id",
-            foreignField: "ticketId",
-            as: "promotionresults",
-          },
-        },
+//           },
+//         },
+//         {
+//           $lookup: {
+//             from: "customers",
+//             localField: "customerId",
+//             foreignField: "_id",
+//             as: "customer",
+//           },
+//         },
+//         {
+//           $unwind: "$customer",
+//         },
+//         {
+//           $lookup: {
+//             from: "vehicleroutes",
+//             localField: "vehicleRouteId",
+//             foreignField: "_id",
+//             as: "vehicleroute",
+//           },
+//         },
+//          {
+//           $unwind: "$vehicleroute",
+//         },
+//          {
+//           $lookup: {
+//             from: "promotionresults",
+//             localField: "_id",
+//             foreignField: "ticketId",
+//             as: "promotionresults",
+//           },
+//         },
 
-         {
-          $lookup: {
-            from: "promotions",
-            localField: "promotionresults.promotionId",
-            foreignField: "_id",
-            as: "promotions",
-          },
-        },
-        {
-          $lookup: {
-            from: "places",
-            localField: "vehicleroute.departure",
-            foreignField: "_id",
-            as: "departure",
-          },
-        },
-        {
-          $unwind: "$departure",
-        },
-        {
-          $lookup: {
-            from: "places",
-            localField: "vehicleroute.destination",
-            foreignField: "_id",
-            as: "destination",
-          },
-        },
-        {
-          $unwind: "$destination",
-        },
-        {
-          $lookup: {
-            from: "cars",
-            localField: "vehicleroute.carId",
-            foreignField: "_id",
-            as: "car",
-          },
-        },
-        {
-          $unwind: "$car",
-        },
-         {
-          $lookup: {
-            from: "prices",
-            localField: "priceId",
-            foreignField: "_id",
-            as: "prices",
-          },
-        },
-        {
-          $unwind: "$prices",
-        },
-        {
-          $project: {
-            _id: "$_id",
-            firstName: "$customer.firstName",
-            lastName: "$customer.lastName",
-            phoneNumber: "$customer.phoneNumber",
-            departure: "$departure",
-            destination: "$destination",
-            licensePlates: "$car.licensePlates",
-            startDate: "$vehicleroute.startDate",
-            endDate: "$vehicleroute.endDate",
-            status:"$status",
-            locaDeparture: "$locationBus",
+//          {
+//           $lookup: {
+//             from: "promotions",
+//             localField: "promotionresults.promotionId",
+//             foreignField: "_id",
+//             as: "promotions",
+//           },
+//         },
+//         {
+//           $lookup: {
+//             from: "places",
+//             localField: "vehicleroute.departure",
+//             foreignField: "_id",
+//             as: "departure",
+//           },
+//         },
+//         {
+//           $unwind: "$departure",
+//         },
+//         {
+//           $lookup: {
+//             from: "places",
+//             localField: "vehicleroute.destination",
+//             foreignField: "_id",
+//             as: "destination",
+//           },
+//         },
+//         {
+//           $unwind: "$destination",
+//         },
+//         {
+//           $lookup: {
+//             from: "cars",
+//             localField: "vehicleroute.carId",
+//             foreignField: "_id",
+//             as: "car",
+//           },
+//         },
+//         {
+//           $unwind: "$car",
+//         },
+//          {
+//           $lookup: {
+//             from: "prices",
+//             localField: "priceId",
+//             foreignField: "_id",
+//             as: "prices",
+//           },
+//         },
+//         {
+//           $unwind: "$prices",
+//         },
+//         {
+//           $project: {
+//             _id: "$_id",
+//             firstName: "$customer.firstName",
+//             lastName: "$customer.lastName",
+//             phoneNumber: "$customer.phoneNumber",
+//             departure: "$departure",
+//             destination: "$destination",
+//             licensePlates: "$car.licensePlates",
+//             startDate: "$vehicleroute.startDate",
+//             endDate: "$vehicleroute.endDate",
+//             status:"$status",
+//             locaDeparture: "$locationBus",
           
-            chair: "$chair",
-            createdAt: "$createdAt",
-            updatedAt: "$updatedAt",
-            promotionresults: "$promotionresults",
-            promotions: "$promotions",
-            prices: "$prices",
-          },
-        },
-      ]);
+//             chair: "$chair",
+//             createdAt: "$createdAt",
+//             updatedAt: "$updatedAt",
+//             promotionresults: "$promotionresults",
+//             promotions: "$promotions",
+//             prices: "$prices",
+//           },
+//         },
+//       ]);
 
 // db.prices.findOne({
 //       routeId: ObjectId("63e12dc694ff2132f39477d5"),
@@ -182,3 +182,78 @@ db.tickets.aggregate([
       //   destination:ObjectId("63da8d81ee09e7dba6d76fca"),
       //   departure:ObjectId("63da8c5cee09e7dba6d76fb1"),
       // });
+
+       db.promotions.aggregate([
+      {
+        $match: {
+          promotionHeaderId: ObjectId("640e05a3ea08be71285e8ba8"),
+        },
+      },
+      {
+        $lookup: {
+          from: "promotionlines",
+          localField: "promotionLineId",
+          foreignField: "_id",
+          as: "promotionlines",
+        },
+      },
+      {
+        $unwind: "$promotionlines",
+      },
+      // {
+      //   $lookup: {
+      //     from: "routetypes",
+      //     localField: "promotionlines.routeTypeId",
+      //     foreignField: "_id",
+      //     as: "routetypes",
+      //   },
+      // },
+      // {
+      //   $unwind: "$routetypes",
+      // },
+      {
+        $lookup: {
+          from: "promotionheaders",
+          localField: "promotionHeaderId",
+          foreignField: "_id",
+          as: "promotionheaders",
+        },
+      },
+      {
+        $unwind: "$promotionheaders",
+      },
+      {
+        $lookup: {
+          from: "promotiontypes",
+          localField: "promotionlines.promotionTypeId",
+          foreignField: "_id",
+          as: "promotiontypes",
+        },
+      },
+      {
+        $unwind: "$promotiontypes",
+      },
+
+      {
+        $project: {
+          _id: "$_id",
+          percentDiscount: "$percentDiscount",
+          quantityTicket: "$quantityTicket",
+          purchaseAmount: "$purchaseAmount",
+          moneyReduced: "$moneyReduced",
+          maximumDiscount: "$maximumDiscount",
+          budget: "$budget",
+          createdAt: "$createdAt",
+          updatedAt: "$updatedAt",
+          promotionType: "$promotiontypes",
+          promotionLine: "$promotionlines",
+          promotionLHeader: "$promotionheaders"
+         
+          // routeTypes: "$routetypes"
+        },
+        {
+as:"promo"
+        } 
+      },
+      
+    ]);

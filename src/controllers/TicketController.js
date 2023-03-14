@@ -121,6 +121,7 @@ class TicketController {
         {
           $unwind: "$customer",
         },
+
         {
           $lookup: {
             from: "vehicleroutes",
@@ -131,6 +132,17 @@ class TicketController {
         },
         {
           $unwind: "$vehicleroute",
+        },
+        {
+          $lookup: {
+            from: "departuretimes",
+            localField: "vehicleroute.startTime",
+            foreignField: "_id",
+            as: "departuretimes",
+          },
+        },
+        {
+          $unwind: "$departuretimes",
         },
         {
           $lookup: {
@@ -209,7 +221,8 @@ class TicketController {
             },
             licensePlates: "$car.licensePlates",
             startDate: "$vehicleroute.startDate",
-            endDate: "$vehicleroute.endDate",
+            endTime: "$vehicleroute.endTime",
+            startTime: "$departuretimes.time",
             status: "$status",
             locaDeparture: "$locationBus",
             chair: "$chair",

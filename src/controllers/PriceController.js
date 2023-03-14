@@ -130,7 +130,7 @@ class PriceController {
     try {
       const priceHeader = await PriceHeader.find();
       for (const priceHd of priceHeader) {
-        if (new Date(priceHd.startDate) > new Date()) {
+        if (new Date(priceHd.endDate) < new Date()) {
           await PriceHeader.updateOne(
             { _id: priceHd._id },
             { $set: { status: false } }

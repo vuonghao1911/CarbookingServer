@@ -1,4 +1,5 @@
 const vehicleRouteService = require("../services/VehicleRouteService");
+const ticketService = require("../services/TicketService");
 const Customer = require("../modal/Customer");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Route = require("../modal/Route");
@@ -189,6 +190,66 @@ class VehicleRouteController {
             promotion,
           });
         }
+      }
+
+      res.json(vehicleRouteSearch);
+    } catch (error) {
+      next(error);
+    }
+  }
+  // get list ticket and list chair vehicle by id vehicle
+  async getListTicketByIdVehicleRoute(req, res, next) {
+    const { vehicleId } = req.params;
+    let vehicleRouteSearch = {};
+    try {
+      const vehicleRoute = await vehicleRouteService.getInfoVehicleById(
+        vehicleId
+      );
+      const vehicle = vehicleRoute[0];
+      console.log(vehicle.departure);
+      const { _id, intendTime, routeType } = await Route.findOne({
+        "departure._id": ObjectId(vehicle.departure._id),
+        "destination._id": ObjectId(vehicle.destination._id),
+      });
+      const price = await vehicleRouteService.checkPriceRoute(
+        vehicle.startDate,
+        _id,
+        vehicle.carTypeId
+      );
+      const promotion = await vehicleRouteService.checkPromotionsRoute(
+        vehicle.startDate
+      );
+
+      const listTicketUser = await ticketService.getTicketByVehicleRouteId(
+        vehicleId
+      );
+
+      if (promotion?.promotionLine.routeTypeId) {
+        if (promotion.promotionLine.routeTypeId === routeType) {
+          vehicleRouteSearch = {
+            vehicle,
+            intendTime,
+            price: price.price,
+            promotion,
+            listTicketUser,
+          };
+        } else {
+          vehicleRouteSearch = {
+            vehicle,
+            intendTime,
+            price: price.price,
+            promotion: null,
+            listTicketUser,
+          };
+        }
+      } else {
+        vehicleRouteSearch = {
+          vehicle,
+          intendTime,
+          price: price.price,
+          promotion,
+          listTicketUser,
+        };
       }
 
       res.json(vehicleRouteSearch);

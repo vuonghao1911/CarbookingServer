@@ -1,4 +1,5 @@
 const Car = require("../modal/Car");
+const carType = require("../modal/CarType");
 const VehicleRoute = require("../modal/VehicleRoute");
 const Price = require("../modal/Price");
 const PriceHeader = require("../modal/PriceHeader");
@@ -8,6 +9,7 @@ const PromotionsLine = require("../modal/PromotionLine");
 const DepartureTime = require("../modal/DepartureTime");
 var mongoose = require("mongoose");
 const Route = require("../modal/Route");
+const CarType = require("../modal/CarType");
 
 const VehicleRouteService = {
   addRoutes: async (
@@ -66,6 +68,7 @@ const VehicleRouteService = {
   getListCarbyStartTime: async (startDate, startTimeId, routeId) => {
     var arrayResults = [];
     var arryListCarDate = [];
+    const result = [];
     const time = await DepartureTime.findById(startTimeId);
     // get list car
     const listCar = await Car.find();
@@ -156,8 +159,16 @@ const VehicleRouteService = {
         console.log("fsfs", arry);
       }
     }
+    for (const car of arrayFinal) {
+      const carType = await CarType.findById(car.typeCarId);
+      result.push({
+        id: car._id,
+        car: car.licensePlates,
+        carType: carType.type,
+      });
+    }
 
-    return arrayFinal;
+    return result;
   },
 
   findVehicleRoute: async (departure, destination) => {
@@ -259,17 +270,106 @@ const VehicleRouteService = {
       endDate: { $gte: new Date(currenDate) },
       startDate: { $lte: new Date(currenDate) },
     });
-    const promotionLine = await PromotionsLine.findOne({
-      promotionHeaderId: promotionHeader._id,
-      endDate: { $gte: new Date(currenDate) },
-      startDate: { $lte: new Date(currenDate) },
-    });
+    if (promotionHeader) {
+      const promotionLine = await PromotionsLine.findOne({
+        promotionHeaderId: promotionHeader._id,
+        endDate: { $gte: new Date(currenDate) },
+        startDate: { $lte: new Date(currenDate) },
+        status: true,
+      });
+      if (promotionLine) {
+        const promotion = await Promotions.findOne({
+          promotionHeaderId: promotionHeader._id,
+          promotionLineId: promotionLine._id,
+        });
+        return { promotionHeader, promotion, promotionLine };
+      } else {
+        return null;
+      }
+    } else {
+      return null;
+    }
+  },
 
-    const promotion = await Promotions.findOne({
-      promotionHeaderId: promotionHeader._id,
-      promotionLineId: promotionLine._id,
-    });
-    return { promotionHeader, promotion, promotionLine };
+  getInfoVehicleById: async (vehicleRouteId) => {
+    const vehicleRoute = await VehicleRoute.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(vehicleRouteId),
+        },
+      },
+      {
+        $lookup: {
+          from: "cars",
+          localField: "carId",
+          foreignField: "_id",
+          as: "car",
+        },
+      },
+      {
+        $unwind: "$car",
+      },
+      {
+        $lookup: {
+          from: "places",
+          localField: "departure",
+          foreignField: "_id",
+          as: "departure",
+        },
+      },
+      {
+        $unwind: "$departure",
+      },
+      {
+        $lookup: {
+          from: "departuretimes",
+          localField: "startTime",
+          foreignField: "_id",
+          as: "departuretimes",
+        },
+      },
+      {
+        $unwind: "$departuretimes",
+      },
+      {
+        $lookup: {
+          from: "places",
+          localField: "destination",
+          foreignField: "_id",
+          as: "destination",
+        },
+      },
+      {
+        $unwind: "$destination",
+      },
+      {
+        $lookup: {
+          from: "cartypes",
+          localField: "car.typeCarId",
+          foreignField: "_id",
+          as: "cartype",
+        },
+      },
+      {
+        $unwind: "$cartype",
+      },
+
+      {
+        $project: {
+          _id: "$_id",
+          startDate: "$startDate",
+          startTime: "$departuretimes.time",
+          endTime: "$endTime",
+          departure: "$departure",
+          destination: "$destination",
+          licensePlates: "$car.licensePlates",
+          carType: "$cartype.type",
+          carTypeId: "$cartype._id",
+          chair: "$chair",
+        },
+      },
+    ]);
+    return vehicleRoute;
   },
 };
 

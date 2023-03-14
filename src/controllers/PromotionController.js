@@ -38,49 +38,60 @@ class PromotionController {
     } else {
       codeDetails = 0;
     }
-    if (new Date(startDate) > new Date()) {
-      status = false;
-    } else {
-      status = true;
-    }
 
-    const checkDate = await promotionService.checDatePromotionsDetails(
+    const checkDate = await promotionService.checDatePromotionsHeader(
       startDate,
       endDate
     );
-    const checkDateLine = await promotionService.checDatePromotionsLine(
-      startDate
-    );
-    if (checkDate && checkDateLine == null) {
-      const promotionLine = new PromotionLine({
-        startDate: startDate,
-        endDate: endDate,
-        status: status,
-        title: title,
-        code: codeLine,
-        title: title,
-        promotionTypeId: promotionType,
-        promotionHeaderId: promotionHeaderId,
-        description: description,
-        routeTypeId: routeTypeId,
+    if (checkDate) {
+      var checkRouteTypeLine = true;
+      const promotionCheck = await PromotionLine.find({
+        endDate: { $gte: new Date(startDate) },
+        status: true,
       });
+      if (promotionCheck.length > 0) {
+        for (const elem of promotionCheck) {
+          if (elem.routeTypeId == null || elem.routeTypeId == routeTypeId) {
+            checkRouteTypeLine = false;
+            break;
+          }
+        }
+      }
 
-      const newPromotionLine = await promotionLine.save();
-      const promotion = new Promotion({
-        percentDiscount: percentDiscount,
-        quantityTicket: quantityTicket,
-        purchaseAmount: purchaseAmount,
-        moneyReduced: moneyReduced,
-        maximumDiscount: maximumDiscount,
-        budget: budget,
-        promotionType: promotionType,
-        promotionHeaderId: promotionHeaderId,
-        promotionLineId: newPromotionLine._id,
-      });
+      if (checkRouteTypeLine) {
+        const promotionLine = new PromotionLine({
+          startDate: startDate,
+          endDate: endDate,
 
-      const newPromotion = await promotion.save();
+          title: title,
+          code: codeLine,
+          title: title,
+          promotionTypeId: promotionType,
+          promotionHeaderId: promotionHeaderId,
+          description: description,
+          routeTypeId: routeTypeId,
+        });
 
-      res.json({ newPromotionLine, newPromotion, message });
+        const newPromotionLine = await promotionLine.save();
+        const promotion = new Promotion({
+          percentDiscount: percentDiscount,
+          quantityTicket: quantityTicket,
+          purchaseAmount: purchaseAmount,
+          moneyReduced: moneyReduced,
+          maximumDiscount: maximumDiscount,
+          budget: budget,
+          promotionType: promotionType,
+          promotionHeaderId: promotionHeaderId,
+          promotionLineId: newPromotionLine._id,
+        });
+
+        const newPromotion = await promotion.save();
+
+        res.json({ newPromotionLine, newPromotion, message });
+      } else {
+        message = " There is a promotionLine for this RouteType";
+        res.json({ newPromotionLine: null, newPromotion: null, message });
+      }
     } else {
       message =
         "startDate and EndDate promotionLine or PromotionDetails invalid ";
@@ -94,25 +105,16 @@ class PromotionController {
   async addPromotionHeader(req, res, next) {
     const { startDate, endDate, title, description, code } = req.body;
 
-    var status;
-
     try {
-      if (new Date(startDate) > new Date()) {
-        status = false;
-      } else {
-        status = true;
-      }
       let data = {
         startDate: startDate,
         endDate: endDate,
         title: title,
-        status: status,
         code: code,
         description: description,
       };
-      const promotionCheck = await promotionService.checDatePromotionsHeader(
-        startDate
-      );
+      const promotionCheck =
+        await promotionService.checkDateisExistPromotionsHeader(startDate);
       console.log(promotionCheck);
       if (promotionCheck) {
         res.json({
@@ -141,7 +143,7 @@ class PromotionController {
 
       for (const promo of promotion) {
         console.log(promo?.promotionLine?.startDate);
-        if (new Date(promo?.promotionLine?.startDate) > new Date()) {
+        if (new Date(promo?.promotionLine?.endDate) < new Date()) {
           await PromotionLine.updateOne(
             { _id: promo?.promotionLine?._id },
             { $set: { status: false } }
@@ -207,23 +209,19 @@ class PromotionController {
   }
 
   async getPromotionByCurrentDate(req, res, next) {
-    var arrayResult = [];
-
+    const result = [];
     try {
       const listPromotions = await promotionService.getPromotion();
-      for (const promotion of listPromotions) {
-        if (
-          new Date(promotion.startDate) < new Date() &&
-          new Date(promotion.endDate) >= new Date()
-        ) {
-          arrayResult.push({ ...promotion, status: true });
-        } else if (new Date() > new Date(promotion.endDate)) {
-          arrayResult.push({ ...promotion, status: null });
-        } else {
-          arrayResult.push({ ...promotion, status: false });
+      for (const elem of listPromotions) {
+        var routeType = null;
+        if (elem?.promotionLine?.routeTypeId) {
+          routeType = await RouteType.findById(
+            elem?.promotionLine?.routeTypeId
+          );
         }
+        result.push({ ...elem, routeType: routeType });
       }
-      res.json(arrayResult);
+      res.json(result);
     } catch (error) {
       next(error);
     }
@@ -233,7 +231,7 @@ class PromotionController {
       const promotionHeader = await PromotionHeader.find();
       //check date > current date update status
       for (const promotionHe of promotionHeader) {
-        if (new Date(promotionHe.startDate) > new Date()) {
+        if (new Date(promotionHe.endDate) < new Date()) {
           await PromotionHeader.updateOne(
             { _id: promotionHe._id },
             { $set: { status: false } }
@@ -243,6 +241,70 @@ class PromotionController {
 
       const promotionResult = await PromotionHeader.find();
       res.json(promotionResult);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async updatePromotionHeader(req, res, next) {
+    const { endDate, status, id } = req.body;
+    var message = "status: active -- not update";
+    const promoHeader = await PromotionHeader.findById(id);
+    const promoLine = await PromotionLine.find({
+      promotionHeaderId: promoHeader._id,
+    });
+    console.log(promoLine);
+    try {
+      if (status) {
+        if (new Date(endDate) < new Date()) {
+          message = "endDate < currendate ";
+          res.json(message);
+        } else if (new Date(endDate) < new Date(promoHeader.endDate)) {
+          message = "endDate < endDatePromotionHeader ";
+          res.json(message);
+        } else {
+          await promotionService.updatePromotionHeader(status, endDate, id);
+          for (const elem of promoLine) {
+            await promotionService.updateStatusPromotionLine(status, elem._id);
+          }
+          message = "update success with status: true";
+          res.json(message);
+        }
+      } else {
+        await promotionService.updatePromotionHeader(status, endDate, id);
+        for (const elem of promoLine) {
+          await promotionService.updateStatusPromotionLine(status, elem._id);
+        }
+        message = "update success with status: false";
+        res.json(message);
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+  async updatePromotionLine(req, res, next) {
+    const { endDate, status, id } = req.body;
+    var message = "status: active -- not update";
+
+    try {
+      if (status) {
+        if (new Date(endDate) < new Date()) {
+          message = "endDate < currendate ";
+          res.json(message);
+        } else if (new Date(endDate) < new Date(promoHeader.endDate)) {
+          message = "endDate < endDatePromotionLine ";
+          res.json(message);
+        } else {
+          await promotionService.updatePromotionLine(status, endDate, id);
+
+          message = "update success with status: true";
+          res.json(message);
+        }
+      } else {
+        await promotionService.updatePromotionLine(status, endDate, id);
+
+        message = "update success with status: false";
+        res.json(message);
+      }
     } catch (error) {
       next(error);
     }

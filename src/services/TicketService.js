@@ -93,6 +93,7 @@ const TicketService = {
       {
         $unwind: "$customer",
       },
+
       {
         $lookup: {
           from: "vehicleroutes",
@@ -103,6 +104,17 @@ const TicketService = {
       },
       {
         $unwind: "$vehicleroute",
+      },
+      {
+        $lookup: {
+          from: "departuretimes",
+          localField: "vehicleroute.startTime",
+          foreignField: "_id",
+          as: "departuretimes",
+        },
+      },
+      {
+        $unwind: "$departuretimes",
       },
       {
         $lookup: {
@@ -181,7 +193,8 @@ const TicketService = {
           },
           licensePlates: "$car.licensePlates",
           startDate: "$vehicleroute.startDate",
-          endDate: "$vehicleroute.endDate",
+          endTime: "$vehicleroute.endTime",
+          startTime: "$departuretimes.time",
           status: "$status",
           locaDeparture: "$locationBus",
           chair: "$chair",
@@ -241,6 +254,42 @@ const TicketService = {
       })
     );
     await Ticket.updateOne({ _id: idTicket }, { $set: { status: false } });
+  },
+  getTicketByVehicleRouteId: async (vehicleRoute) => {
+    const ticket = await Ticket.aggregate([
+      {
+        $match: {
+          vehicleRouteId: ObjectId(vehicleRoute),
+        },
+      },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customer",
+        },
+      },
+      {
+        $unwind: "$customer",
+      },
+      {
+        $project: {
+          _id: "$_id",
+          firstName: "$customer.firstName",
+          lastName: "$customer.lastName",
+          phoneNumber: "$customer.phoneNumber",
+          createdAt: "$createdAt",
+          updatedAt: "$updatedAt",
+          code: "$code",
+          status: "$status",
+          chair: "$chair",
+          quantity: "$quantity",
+        },
+      },
+      { $sort: { _id: -1 } },
+    ]);
+    return ticket;
   },
 };
 
