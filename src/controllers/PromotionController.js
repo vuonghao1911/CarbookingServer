@@ -268,9 +268,7 @@ class PromotionController {
           res.json(message);
         } else {
           await promotionService.updatePromotionHeader(status, endDate, id);
-          for (const elem of promoLine) {
-            await promotionService.updateStatusPromotionLine(status, elem._id);
-          }
+
           message = "update success with status: true";
           res.json(message);
         }
@@ -291,23 +289,34 @@ class PromotionController {
     var message = "status: active -- not update";
 
     try {
-      if (status) {
-        if (new Date(endDate) < new Date()) {
-          message = "endDate < currendate ";
-          res.json(message);
-        } else if (new Date(endDate) < new Date(promoHeader.endDate)) {
-          message = "endDate < endDatePromotionLine ";
-          res.json(message);
+      const promoLine = await PromotionLine.findById(id);
+      const promoHeader = await PromotionHeader.findById(
+        promoLine.promotionHeaderId
+      );
+
+      if (promoHeader.status) {
+        if (status) {
+          if (new Date(endDate) < new Date()) {
+            message = "endDate < currendate ";
+            res.json(message);
+          } else if (new Date(endDate) < new Date(promoHeader.endDate)) {
+            message = "endDate < endDatePromotionLine ";
+            res.json(message);
+          } else {
+            await promotionService.updatePromotionLine(status, endDate, id);
+
+            message = "update success with status: true";
+            res.json(message);
+          }
         } else {
           await promotionService.updatePromotionLine(status, endDate, id);
 
-          message = "update success with status: true";
+          message = "update success with status: false";
           res.json(message);
         }
       } else {
-        await promotionService.updatePromotionLine(status, endDate, id);
-
-        message = "update success with status: false";
+        message =
+          "Can not update PromotionLine because status of PromotionsHeader is false";
         res.json(message);
       }
     } catch (error) {
