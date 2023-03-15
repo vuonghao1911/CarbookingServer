@@ -71,7 +71,7 @@ const VehicleRouteService = {
     const result = [];
     const time = await DepartureTime.findById(startTimeId);
     // get list car
-    const listCar = await Car.find();
+    var listCar = await Car.find();
     // get infomation route
     const { departure, destination, intendTime } = await Route.findById(
       routeId
@@ -96,6 +96,16 @@ const VehicleRouteService = {
       destination: destination._id,
       departure: departure._id,
     });
+    function removeObjectWithId(arr, id) {
+      const objWithIdIndex = arr.findIndex((obj) => obj._id == id);
+      console.log(objWithIdIndex);
+      if (objWithIdIndex > -1) {
+        arr.splice(objWithIdIndex, 1);
+      }
+
+      return arr;
+    }
+
     // check listVehcle ==0? find vehicleRoute of ListCar
     if (listVehcle.length == 0) {
       for (const e of listCar) {
@@ -108,29 +118,33 @@ const VehicleRouteService = {
         //check endTime vehicleRoute of Car
         if (carTrip) {
           if (
-            carTrip.endTime.substring(0, 3) * 1 + intendTime + 1 >
-            time.time.substring(0, 3) * 1
+            carTrip.endTime.substring(0, 2) * 1 + intendTime + 1 >
+            time.time.substring(0, 2) * 1
           ) {
-            console.log(carTrip.endTime.substring(0, 3));
+            console.log("cartrip", carTrip.endTime.substring(0, 2));
             arrayFinal.push(e);
           }
         } else {
           //find car already have a route in date body
-          for (const e of arryListCarDate) {
-            // get list car unique
-            const arry = await Car.find({ _id: { $ne: e.carId } });
-
-            arrayFinal.push(...arry);
+          // console.log("listCarDate", arryListCarDate);
+          if (arryListCarDate.length > 0) {
+            for (const e of arryListCarDate) {
+              //   // get list car unique
+              removeObjectWithId(listCar, e.carId.toString());
+            }
+            arrayFinal.push(...listCar);
+            //  console.log("carUni", listCar);
 
             let cachedObject = {};
             arrayFinal.map((item) => (cachedObject[item.id] = item));
             arrayFinal = Object.values(cachedObject);
-            console.log("carun", arry);
+          } else {
+            arrayFinal.push(...listCar);
+            console.log("list xe khong trung");
+            let cachedObject = {};
+            arrayFinal.map((item) => (cachedObject[item.id] = item));
+            arrayFinal = Object.values(cachedObject);
           }
-
-          let cachedObject = {};
-          arrayFinal.map((item) => (cachedObject[item.id] = item));
-          arrayFinal = Object.values(cachedObject);
         }
       }
     } else {
@@ -146,17 +160,17 @@ const VehicleRouteService = {
 
       const arrayList1 = new Set(arrayResults);
       const arrayList = [...arrayList1];
-      console.log("listcdss", arrayList);
+      //  console.log("listcdss", arrayList);
       // get list car unique
       for (const e of arrayList) {
-        const arry = await Car.find({ _id: { $ne: e.carId } });
+        removeObjectWithId(listCar, e.carId.toString());
 
-        arrayFinal.push(...arry);
+        arrayFinal.push(...listCar);
 
         let cachedObject = {};
         arrayFinal.map((item) => (cachedObject[item.id] = item));
         arrayFinal = Object.values(cachedObject);
-        console.log("fsfs", arry);
+        //  console.log("fsfs", listCar);
       }
     }
     for (const car of arrayFinal) {

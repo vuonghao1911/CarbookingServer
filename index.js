@@ -168,3 +168,6 @@ serverTest.listen(5005, () => {
 // server.listen(5005, () => {
 //   console.log("Example app listening on https://localhost:" + 5005);
 // });
+
+const test = "06:30";
+console.log(test.substring(0, 2));
