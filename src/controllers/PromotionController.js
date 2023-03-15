@@ -1,4 +1,5 @@
 const promotionService = require("../services/PromotionService");
+const awsS3Service = require("../services/AwsS3Service");
 const Promotion = require("../modal/Promotion");
 const PromotionHeader = require("../modal/PromotionHeader");
 const PromotionService = require("../services/PromotionService");
@@ -104,14 +105,18 @@ class PromotionController {
   // add promotion header
   async addPromotionHeader(req, res, next) {
     const { startDate, endDate, title, description, code } = req.body;
+    const file = req.file;
 
     try {
+      const urlImg = await awsS3Service.uploadFile(file);
+
       let data = {
         startDate: startDate,
         endDate: endDate,
         title: title,
         code: code,
         description: description,
+        imgUrl: urlImg,
       };
       const promotionCheck =
         await promotionService.checkDateisExistPromotionsHeader(startDate);

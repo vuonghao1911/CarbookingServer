@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const uploadFile = require("../middleware/uploadFile");
 const promotionController = require("../controllers/PromotionController");
 // add promotion Line and add promotionDetails
 router.post("/addPromotion", promotionController.addPromotions);
@@ -7,7 +8,11 @@ router.get("/all/getPromotion/:idProHeader", promotionController.getPromotion);
 router.post("/addPromotionType", promotionController.addPromotionType);
 router.get("/all/getPromotionType", promotionController.getPromotionType);
 router.post("/addPromotionResult", promotionController.addPromotionResult);
-router.post("/addPromotionHeader", promotionController.addPromotionHeader);
+router.post(
+  "/addPromotionHeader",
+  uploadFile.uploadFileMiddleware,
+  promotionController.addPromotionHeader
+);
 // get list Promotion by currentDate --- mobile
 router.get(
   "/all/getPromotionCurrenDate",

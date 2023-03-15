@@ -11,7 +11,7 @@ const axios = require("axios"); // npm install axios
 const CryptoJS = require("crypto-js"); // npm install crypto-js
 const moment = require("moment"); // npm install moment
 const qs = require("qs");
-
+require("dotenv").config();
 const handleEror = require("./src/middleware/handleEror");
 
 //const { connectDB } = require("./src/config/configDb");

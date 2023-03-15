@@ -101,6 +101,7 @@ const PromotionService = {
     const promotion = await PromotionLine.findOne({
       endDate: { $gte: new Date(startDate) },
       startDate: { $lte: new Date(startDate) },
+      status: true,
     });
     return promotion;
   },

@@ -1,4 +1,5 @@
 const customerService = require("../services/customerService");
+const AwsS3Service = require("../services/AwsS3Service");
 const Customer = require("../modal/Customer");
 const CustomerType = require("../modal/CustomerType");
 class CustomerController {
@@ -113,6 +114,19 @@ class CustomerController {
     try {
       const customer = await customerService.getCustomerByPhone(phone);
       return res.json(customer);
+    } catch (error) {
+      console.log(error);
+      next(error);
+    }
+  }
+
+  async uploadFine(req, res, next) {
+    const file = req.file;
+    //console.log(number);
+    try {
+      console.log(file);
+      const location = await AwsS3Service.uploadFile(file);
+      return res.json({ locationFile: location });
     } catch (error) {
       console.log(error);
       next(error);

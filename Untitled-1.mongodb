@@ -247,13 +247,9 @@
           updatedAt: "$updatedAt",
           promotionType: "$promotiontypes",
           promotionLine: "$promotionlines",
-          promotionLHeader: "$promotionheaders"
-         
+          promotionLHeader: "$promotionheaders"      
           // routeTypes: "$routetypes"
         },
-        {
-as:"promo"
-        } 
       },
       
     ]);

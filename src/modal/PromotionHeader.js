@@ -24,6 +24,9 @@ const promotionHeaderSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    imgUrl: {
+      type: String,
+    },
     code: {
       type: String,
     },
