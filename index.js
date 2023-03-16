@@ -5,7 +5,7 @@ const port = 3000;
 const http = require("http");
 const https = require("https");
 var bodyParser = require("body-parser");
-const serverTest = http.createServer(app);
+//const serverTest = http.createServer(app);
 const server = https.createServer(app);
 const axios = require("axios"); // npm install axios
 const CryptoJS = require("crypto-js"); // npm install crypto-js
@@ -155,7 +155,7 @@ app.post("/getStatusOrderZalopay", (req, res) => {
 //   res.json(response);
 // });
 
-serverTest.listen(5005, () => {
+app.listen(5005, () => {
   console.log("Example app listening on http://localhost:" + 5005);
 });
 //var date = new Date("2023-01-03T09:00:00.000Z");
@@ -168,6 +168,3 @@ serverTest.listen(5005, () => {
 // server.listen(5005, () => {
 //   console.log("Example app listening on https://localhost:" + 5005);
 // });
-
-const test = "06:30";
-console.log(test.substring(0, 2));
